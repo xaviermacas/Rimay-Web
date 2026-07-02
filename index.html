@@ -1,832 +1,1464 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="./support.js"></script>
-<title>Rimay</title>
+<title>Rimay - Terapia del habla que se ve</title>
+<meta name="description" content="Rimay acompaña la terapia del habla post-ACV: biofeedback bimodal con compuerta AND, privacidad por diseño y telemetría clínica para tu fonoaudiólogo.">
+<meta name="theme-color" content="#04090A">
 <link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@1&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   RIMAY — rediseño 2026
+   ============================================================ */
+:root{
+  --bg:#04090A;
+  --bg-2:#071013;
+  --bg-3:#0B181B;
+  --ink:#EDF6F3;
+  --mut:#8FA8A5;
+  --dim:#5E7775;
+  --teal:#2FB4A8;
+  --green:#46CB8E;
+  --mint:#BFF5DC;
+  --amber:#E2A23E;
+  --coral:#E0726B;
+  --line:rgba(237,246,243,.08);
+  --grad:linear-gradient(120deg,#2FB4A8,#46CB8E);
+  --fd:'Space Grotesk',system-ui,sans-serif;
+  --fs:'Instrument Serif',Georgia,serif;
+  --fm:'IBM Plex Mono',ui-monospace,monospace;
+  --r-lg:26px; --r-md:18px; --r-sm:12px;
+  --easing:cubic-bezier(.22,1,.36,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:var(--fd);font-size:17px;line-height:1.6;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;
+}
+::selection{background:#16A06B;color:#031310}
+a{color:inherit;text-decoration:none}
+img,video{display:block;max-width:100%}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+input::placeholder,textarea::placeholder{color:var(--dim)}
+.mono{font-family:var(--fm);font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+.serif{font-family:var(--fs);font-style:italic;font-weight:400;letter-spacing:0}
+.grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+.container{width:min(1280px,calc(100% - clamp(40px,8vw,128px)));margin-inline:auto}
+
+/* ---- film grain ---- */
+.grain{position:fixed;inset:-100px;z-index:90;pointer-events:none;opacity:.5;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E");
+}
+
+/* ---- loader ---- */
+.loader{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:28px;
+  animation:loaderAway .7s var(--easing) 3.4s forwards}
+.loader-word{display:flex;gap:.06em;font-weight:700;font-size:clamp(40px,8vw,84px);letter-spacing:-.03em;line-height:1}
+.loader-word span{display:inline-block;opacity:0;transform:translateY(.6em);animation:ldChar .8s var(--easing) forwards}
+.loader-word span:nth-child(1){animation-delay:.05s}.loader-word span:nth-child(2){animation-delay:.11s}
+.loader-word span:nth-child(3){animation-delay:.17s}.loader-word span:nth-child(4){animation-delay:.23s}
+.loader-word span:nth-child(5){animation-delay:.29s}
+.loader-word em{font-family:var(--fs);font-style:italic;font-weight:400}
+.loader-bar{width:min(320px,60vw);height:1px;background:var(--line);overflow:hidden;border-radius:2px}
+.loader-bar i{display:block;height:100%;width:100%;background:var(--grad);transform:scaleX(0);transform-origin:left;animation:ldBar 1.6s var(--easing) .2s forwards}
+.loader-tag{color:var(--dim)}
+@keyframes ldChar{to{opacity:1;transform:none}}
+@keyframes ldBar{to{transform:scaleX(1)}}
+@keyframes loaderAway{to{opacity:0;visibility:hidden;transform:translateY(-3%)}}
+
+/* ---- custom cursor ---- */
+.cur-dot,.cur-ring{position:fixed;top:0;left:0;z-index:150;pointer-events:none;border-radius:50%;transform:translate(-100px,-100px);opacity:0;transition:opacity .3s}
+.cur-dot{width:7px;height:7px;background:var(--mint)}
+.cur-ring{width:38px;height:38px;border:1px solid rgba(191,245,220,.5);transition:opacity .3s,width .35s var(--easing),height .35s var(--easing),background-color .35s,border-color .35s}
+.cur-ring.is-hover{width:64px;height:64px;background:rgba(70,203,142,.08);border-color:rgba(70,203,142,.7)}
+body.has-cursor .cur-dot,body.has-cursor .cur-ring{opacity:1}
+@media (pointer:coarse){.cur-dot,.cur-ring{display:none}}
+
+/* ---- particles ---- */
+#fx{position:fixed;inset:0;z-index:3;pointer-events:none;mix-blend-mode:screen}
+
+/* ---- progress ---- */
+.progress{position:fixed;top:0;left:0;right:0;height:2px;z-index:120;pointer-events:none}
+.progress i{display:block;height:100%;background:var(--grad);transform:scaleX(0);transform-origin:left}
+
+/* ---- header ---- */
+.hdr{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:22px clamp(20px,4vw,56px);transition:padding .4s var(--easing)}
+.hdr::before{content:"";position:absolute;inset:0;background:rgba(4,9,10,.65);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line);opacity:0;transition:opacity .4s}
+.hdr.scrolled{padding-top:14px;padding-bottom:14px}
+.hdr.scrolled::before{opacity:1}
+.brand{position:relative;display:flex;align-items:center;gap:12px;z-index:2}
+.brand svg{flex:none}
+.brand b{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.brand .mono{color:var(--dim);border-left:1px solid var(--line);padding-left:12px}
+.nav-pill{position:relative;z-index:2;display:flex;align-items:center;gap:2px;padding:5px;border-radius:999px;
+  background:rgba(12,24,26,.5);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.nav-pill a{padding:9px 16px;border-radius:999px;font-size:14px;font-weight:500;color:var(--mut);white-space:nowrap;transition:color .25s,background-color .25s}
+@media (max-width:1080px){.nav-pill a{padding:9px 11px;font-size:13px}}
+.nav-pill a:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+.hdr-cta{position:relative;z-index:2}
+.burger{position:relative;z-index:2;display:none;width:48px;height:48px;border-radius:14px;border:1px solid var(--line);
+  background:rgba(12,24,26,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);cursor:pointer;align-items:center;justify-content:center}
+.burger i{position:relative;display:block;width:20px;height:2px;background:var(--ink);transition:background .2s .1s}
+.burger i::before,.burger i::after{content:"";position:absolute;left:0;width:20px;height:2px;background:var(--ink);transition:transform .35s var(--easing),top .35s var(--easing)}
+.burger i::before{top:-6px}.burger i::after{top:6px}
+body.menu-open .burger i{background:transparent}
+body.menu-open .burger i::before{top:0;transform:rotate(45deg)}
+body.menu-open .burger i::after{top:0;transform:rotate(-45deg)}
+@media (max-width:960px){.nav-pill{display:none}.hdr a.hdr-cta{display:none!important}.burger{display:flex}}
+@media (max-width:640px){.brand .mono{display:none}}
+
+/* ---- mobile menu ---- */
+.mmenu{position:fixed;inset:0;z-index:95;background:rgba(4,9,10,.9);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  display:flex;flex-direction:column;justify-content:center;padding:0 clamp(28px,8vw,64px);
+  clip-path:circle(0% at calc(100% - 44px) 44px);visibility:hidden;transition:clip-path .7s var(--easing),visibility 0s .7s}
+body.menu-open .mmenu{clip-path:circle(150% at calc(100% - 44px) 44px);visibility:visible;transition:clip-path .7s var(--easing)}
+.mmenu a.mm-link{display:flex;align-items:baseline;gap:18px;padding:16px 0;border-bottom:1px solid var(--line);
+  font-size:clamp(30px,7vw,44px);font-weight:700;letter-spacing:-.03em;
+  opacity:0;transform:translateY(24px);transition:opacity .5s var(--easing),transform .5s var(--easing)}
+.mmenu a.mm-link .mono{color:var(--teal)}
+body.menu-open .mmenu a.mm-link{opacity:1;transform:none}
+body.menu-open .mmenu a.mm-link:nth-child(1){transition-delay:.15s}
+body.menu-open .mmenu a.mm-link:nth-child(2){transition-delay:.21s}
+body.menu-open .mmenu a.mm-link:nth-child(3){transition-delay:.27s}
+body.menu-open .mmenu a.mm-link:nth-child(4){transition-delay:.33s}
+body.menu-open .mmenu a.mm-link:nth-child(5){transition-delay:.39s}
+.mmenu .mm-cta{margin-top:36px;opacity:0;transform:translateY(24px);transition:opacity .5s var(--easing) .45s,transform .5s var(--easing) .45s}
+body.menu-open .mmenu .mm-cta{opacity:1;transform:none}
+
+/* ---- buttons ---- */
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:17px 32px;border-radius:999px;font-weight:600;font-size:15px;border:none;cursor:pointer;overflow:hidden;
+  transition:box-shadow .35s,transform .35s var(--easing)}
+.btn .bl{position:relative;z-index:2;display:inline-flex;align-items:center;gap:10px;pointer-events:none}
+.btn::after{content:"";position:absolute;top:0;left:-140%;width:60%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);
+  transform:skewX(-18deg);transition:left .7s ease;pointer-events:none}
+.btn:hover::after{left:160%}
+.btn-primary{color:#031310;background:var(--grad);box-shadow:0 14px 44px -14px rgba(70,203,142,.6)}
+.btn-primary:hover{box-shadow:0 18px 54px -12px rgba(70,203,142,.75)}
+.btn-ghost{color:var(--ink);background:rgba(255,255,255,.04);border:1px solid rgba(237,246,243,.16);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.btn-ghost:hover{border-color:rgba(70,203,142,.5)}
+.btn-sm{padding:12px 22px;font-size:14px}
+.btn-block{width:100%}
+
+/* ---- section scaffolding ---- */
+section{position:relative;scroll-margin-top:90px}
+.sec-pad{padding:clamp(90px,12vw,160px) 0}
+.sec-tag{display:flex;align-items:center;gap:14px;margin-bottom:26px;color:var(--teal)}
+.sec-tag::after{content:"";height:1px;width:64px;background:linear-gradient(90deg,var(--teal),transparent)}
+.sec-tag .idx{color:var(--dim)}
+.h2{font-size:clamp(34px,5.2vw,66px);line-height:1.02;font-weight:700;letter-spacing:-.035em;max-width:20ch}
+.h2 .serif{font-size:1.04em}
+.lead{font-size:clamp(17px,1.6vw,20px);color:var(--mut);max-width:62ch;margin-top:24px}
+.lead strong{color:var(--ink);font-weight:600}
+.ghost-num{position:absolute;top:clamp(20px,4vw,60px);right:-2vw;z-index:0;pointer-events:none;user-select:none;
+  font-weight:700;font-size:clamp(140px,24vw,340px);line-height:.8;letter-spacing:-.05em;
+  color:transparent;-webkit-text-stroke:1px rgba(237,246,243,.07)}
+.w{display:inline-block;overflow:hidden;vertical-align:bottom;padding:.1em .12em .18em;margin:-.1em -.12em -.18em}
+.wi{display:inline-block;will-change:transform}
+
+/* ---- glow cards (mouse-follow light) ---- */
+.glow-card{position:relative;overflow:hidden}
+.glow-card::before{content:"";position:absolute;inset:0;z-index:0;opacity:0;transition:opacity .4s;pointer-events:none;
+  background:radial-gradient(520px circle at var(--mx,50%) var(--my,50%),rgba(47,180,168,.13),transparent 45%)}
+.glow-card:hover::before{opacity:1}
+.glow-card>*{position:relative;z-index:1}
+
+/* ============ HERO ============ */
+.hero{min-height:100svh;display:flex;flex-direction:column;justify-content:center;overflow:hidden;padding:120px 0 60px}
+#aurora{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.hero-veil{position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(180deg,rgba(4,9,10,.7),rgba(4,9,10,.15) 30%,rgba(4,9,10,.2) 70%,var(--bg) 100%)}
+.hero-grid{position:relative;z-index:4;display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,4vw,64px);align-items:center}
+.kicker{display:inline-flex;align-items:center;gap:12px;color:var(--green);margin-bottom:30px}
+.kicker::before{content:"";width:34px;height:1px;background:var(--green)}
+.kicker .dotp{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulseDot 2s infinite}
+@keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(70,203,142,.5)}50%{box-shadow:0 0 0 7px rgba(70,203,142,0)}}
+.h1{font-size:clamp(46px,7.4vw,108px);line-height:.99;font-weight:700;letter-spacing:-.045em}
+@media (min-width:1021px){.h1{font-size:clamp(44px,4.6vw,78px)}}
+.h1 .h1-line{display:block}
+.h1 .serif{font-size:1.05em;color:var(--mint)}
+.hero-sub{font-size:clamp(17px,1.7vw,21px);color:var(--mut);max-width:52ch;margin-top:30px}
+.hero-cta{display:flex;align-items:center;gap:16px;margin-top:40px;flex-wrap:wrap}
+.hero-chips{display:flex;gap:26px;margin-top:44px;list-style:none;flex-wrap:wrap}
+.hero-chips li{display:flex;align-items:center;gap:9px;color:var(--dim);font-family:var(--fm);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.hero-chips li::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--teal)}
+
+.hero-media{position:relative;border-radius:var(--r-lg)}
+.hero-media .frame{position:relative;border-radius:var(--r-lg);overflow:hidden;border:1px solid rgba(237,246,243,.12);
+  box-shadow:0 60px 120px -40px rgba(0,0,0,.8),0 0 80px -30px rgba(47,180,168,.25);aspect-ratio:4/4.6;background:var(--bg-2)}
+.hero-media video{width:100%;height:100%;object-fit:cover;object-position:70% 30%;transform:scale(1.06)}
+.hero-media .frame::after{content:"";position:absolute;inset:0;background:linear-gradient(200deg,rgba(4,9,10,0) 40%,rgba(4,9,10,.55));pointer-events:none}
+.hud-pill{position:absolute;display:flex;align-items:center;gap:8px;padding:9px 15px;border-radius:999px;
+  background:rgba(4,12,13,.66);border:1px solid rgba(70,203,142,.3);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  font-family:var(--fm);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--green);z-index:3}
+.hud-pill .rec{width:7px;height:7px;border-radius:50%;background:var(--coral);animation:blink 1.2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+.hero-hud-1{top:18px;left:18px}
+.hero-hud-2{top:18px;right:18px;color:var(--mut);border-color:var(--line)}
+.hero-datacard{position:absolute;left:-9%;bottom:8%;z-index:4;display:flex;gap:20px;padding:20px 24px;border-radius:var(--r-md);
+  background:rgba(6,15,16,.72);border:1px solid rgba(237,246,243,.12);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  box-shadow:0 30px 70px -30px rgba(0,0,0,.8)}
+.hero-datacard .dnum{font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.hero-datacard .dlab{font-family:var(--fm);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-top:7px;line-height:1.5}
+.hero-datacard .dsep{width:1px;background:var(--line)}
+.corner{position:absolute;width:22px;height:22px;border:2px solid rgba(191,245,220,.55);z-index:3}
+.corner.tl{top:12px;left:12px;border-right:none;border-bottom:none;border-radius:6px 0 0 0}
+.corner.tr{top:12px;right:12px;border-left:none;border-bottom:none;border-radius:0 6px 0 0}
+.corner.bl{bottom:12px;left:12px;border-right:none;border-top:none;border-radius:0 0 0 6px}
+.corner.br{bottom:12px;right:12px;border-left:none;border-top:none;border-radius:0 0 6px 0}
+.scroll-cue{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:5;display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--dim)}
+.scroll-cue .line{width:1px;height:44px;background:var(--line);overflow:hidden;position:relative}
+.scroll-cue .line::after{content:"";position:absolute;top:-50%;left:0;width:100%;height:50%;background:var(--green);animation:cueDrop 1.8s var(--easing) infinite}
+@keyframes cueDrop{to{top:110%}}
+
+/* ============ MARQUEE ============ */
+.marquee{position:relative;z-index:5;padding:26px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  overflow:hidden;background:rgba(7,16,19,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.marquee-track{display:flex;gap:0;width:max-content;animation:mq 30s linear infinite}
+.marquee span{display:flex;align-items:center;gap:34px;padding-right:34px;white-space:nowrap;
+  font-size:clamp(15px,1.6vw,19px);font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.marquee span i{font-style:normal;color:var(--teal);font-size:.8em}
+.marquee span em{font-family:var(--fs);font-style:italic;text-transform:none;color:var(--mint);letter-spacing:0}
+@keyframes mq{to{transform:translateX(-50%)}}
+
+/* ============ PROBLEMA ============ */
+.rows{margin-top:clamp(44px,6vw,72px);border-top:1px solid var(--line)}
+.row-item{display:grid;grid-template-columns:90px 1fr 1.15fr 70px;gap:28px;align-items:center;
+  padding:clamp(28px,4vw,46px) 10px;border-bottom:1px solid var(--line);position:relative;overflow:hidden;
+  transition:background-color .4s,padding-left .4s var(--easing)}
+.row-item:hover{background:rgba(255,255,255,.025);padding-left:26px}
+.row-item .ri-idx{font-family:var(--fm);font-size:13px;color:var(--dim);letter-spacing:.1em}
+.row-item h3{font-size:clamp(22px,2.6vw,32px);font-weight:700;letter-spacing:-.03em}
+.row-item p{color:var(--mut);font-size:16px;max-width:48ch}
+.row-item .ri-ico{width:56px;height:56px;border-radius:16px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+  transition:border-color .4s,transform .5s var(--easing),background-color .4s;justify-self:end}
+.row-item:hover .ri-ico{border-color:rgba(70,203,142,.5);background:rgba(70,203,142,.07);transform:rotate(-8deg) scale(1.08)}
+@media (max-width:820px){.row-item{grid-template-columns:1fr;gap:10px}.row-item .ri-ico{display:none}.row-item p{max-width:none}}
+
+/* ============ CÓMO FUNCIONA / SIMULADOR ============ */
+.sec-como{background:radial-gradient(1000px 600px at 85% 0%,rgba(16,48,46,.55),transparent 60%)}
+.sim-wrap{display:grid;grid-template-columns:1.08fr .92fr;gap:24px;margin-top:clamp(44px,6vw,70px);align-items:stretch}
+.sim-stage{position:relative;border-radius:var(--r-lg);overflow:hidden;border:1px solid rgba(237,246,243,.1);min-height:480px;background:var(--bg-2)}
+.sim-stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 38%}
+.sim-stage .shade{position:absolute;inset:0;background:radial-gradient(120% 100% at 50% 40%,transparent 45%,rgba(4,9,10,.55));pointer-events:none}
+.scanline{position:absolute;left:0;right:0;top:0;height:120px;pointer-events:none;opacity:.5;
+  background:linear-gradient(180deg,transparent,rgba(70,203,142,.14) 55%,rgba(70,203,142,.4) 98%,transparent);
+  animation:scan 4.5s var(--easing) infinite}
+@keyframes scan{0%{transform:translateY(-130px)}60%,100%{transform:translateY(560px)}}
+.sim-hud-top{position:absolute;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;gap:10px;z-index:4;flex-wrap:wrap}
+.sim-caption{position:absolute;left:16px;right:16px;bottom:16px;z-index:4;display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:16px 20px;border-radius:var(--r-md);background:rgba(5,13,14,.74);border:1px solid rgba(237,246,243,.1);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.sim-caption .cap-l{font-size:14.5px;color:var(--mut)}
+.sim-caption .cap-l b{color:var(--ink);display:block;font-size:16px;letter-spacing:-.01em}
+.sim-ring{position:relative;width:58px;height:58px;flex:none}
+.sim-ring svg{transform:rotate(-90deg)}
+.sim-ring .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:12.5px;font-weight:500}
+
+.sim-side{display:flex;flex-direction:column;gap:0;border-radius:var(--r-lg);border:1px solid rgba(237,246,243,.1);
+  background:linear-gradient(160deg,rgba(12,26,28,.85),rgba(6,14,15,.9));padding:clamp(22px,2.6vw,32px)}
+.sig-label{display:flex;justify-content:space-between;align-items:baseline;color:var(--dim);margin-bottom:12px}
+.sig-label b{color:var(--ink);font-family:var(--fm);font-size:12px;letter-spacing:.14em}
+.sig-val{font-family:var(--fm);font-size:13px;color:var(--green)}
+.meter{height:10px;border-radius:99px;background:rgba(255,255,255,.05);overflow:hidden;position:relative}
+.meter i{position:absolute;inset:0;transform-origin:left;transform:scaleX(0);border-radius:99px;
+  background:linear-gradient(90deg,#1E7A72,var(--teal),var(--green));transition:transform .18s linear}
+.meter::after{content:"";position:absolute;left:45%;top:-3px;bottom:-3px;width:1px;background:rgba(237,246,243,.25)}
+#wave{width:100%;height:64px;display:block}
+.sim-div{height:1px;background:var(--line);margin:22px 0}
+
+.gate{display:flex;align-items:center;gap:0;margin-top:4px}
+.g-ins{display:flex;flex-direction:column;gap:10px}
+.g-chip{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);
+  background:rgba(255,255,255,.03);font-family:var(--fm);font-size:11.5px;letter-spacing:.14em;color:var(--dim);transition:all .3s}
+.g-chip i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.15);transition:all .3s}
+.g-chip.on{color:var(--mint);border-color:rgba(70,203,142,.45);background:rgba(70,203,142,.08)}
+.g-chip.on i{background:var(--green);box-shadow:0 0 10px rgba(70,203,142,.9)}
+.g-wire{flex:1;height:2px;min-width:22px;background:rgba(255,255,255,.09);position:relative;overflow:hidden}
+.g-wire::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,var(--green),transparent);
+  transform:translateX(-100%);opacity:0;transition:opacity .3s}
+.g-wire.on::after{opacity:1;animation:flow 1s linear infinite}
+@keyframes flow{to{transform:translateX(100%)}}
+.g-and{flex:none;width:64px;height:64px;border-radius:18px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+  font-family:var(--fm);font-weight:500;font-size:14px;letter-spacing:.1em;color:var(--dim);
+  background:rgba(255,255,255,.03);transition:all .35s}
+.g-and.on{color:#031310;background:var(--grad);border-color:transparent;box-shadow:0 0 34px rgba(70,203,142,.5)}
+.g-out{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+  color:var(--dim);font-size:17px;transition:all .35s;background:rgba(255,255,255,.03)}
+.g-out.on{color:#031310;background:var(--green);border-color:transparent;box-shadow:0 0 26px rgba(70,203,142,.8)}
+.sim-outrow{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:auto;padding-top:22px;flex-wrap:wrap}
+.sim-outrow .lab{font-size:14.5px;color:var(--mut)}
+.rep-num{font-size:44px;font-weight:700;letter-spacing:-.04em;line-height:1}
+.rep-flash{font-family:var(--fm);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--green);
+  border:1px solid rgba(70,203,142,.4);border-radius:99px;padding:8px 14px;opacity:.25;transition:opacity .3s,box-shadow .3s}
+.rep-flash.on{opacity:1;box-shadow:0 0 24px rgba(70,203,142,.35)}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:22px}
+.step{padding:26px 26px 30px;border-radius:var(--r-md);border:1px solid var(--line);background:rgba(255,255,255,.02);
+  transition:transform .5s var(--easing),border-color .4s,background-color .4s}
+.step:hover{transform:translateY(-6px);border-color:rgba(70,203,142,.4);background:rgba(70,203,142,.05)}
+.step .mono{color:var(--teal);display:block;margin-bottom:14px}
+.step h4{font-size:19px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
+.step p{color:var(--mut);font-size:15px}
+@media (max-width:1020px){.sim-wrap{grid-template-columns:1fr}.sim-stage{min-height:420px}}
+@media (max-width:760px){.steps{grid-template-columns:1fr}}
+
+/* ============ PRIVACIDAD ============ */
+.sec-priv{background:radial-gradient(900px 600px at 12% 100%,rgba(15,42,42,.5),transparent 60%)}
+.airlock{display:grid;grid-template-columns:1fr 84px 1fr;margin-top:clamp(44px,6vw,70px);border-radius:var(--r-lg);
+  border:1px solid rgba(237,246,243,.1);overflow:hidden;background:var(--bg-2);min-height:380px}
+.air-left{position:relative;padding:clamp(28px,4vw,48px);overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:22px}
+.air-left .blob{position:absolute;border-radius:50%;filter:blur(56px)}
+.air-left .b1{width:220px;height:220px;background:rgba(224,114,107,.3);top:-8%;left:6%;animation:drift 9s ease-in-out infinite}
+.air-left .b2{width:260px;height:260px;background:rgba(47,180,168,.28);bottom:-14%;right:2%;animation:drift 11s ease-in-out infinite reverse}
+@keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(24px,-20px)}}
+.air-left .glass{position:absolute;inset:0;background:rgba(6,14,15,.35);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px)}
+.air-left>div:not(.blob):not(.glass){position:relative;z-index:2}
+.air-head{display:flex;align-items:center;gap:14px}
+.air-head .aico{width:50px;height:50px;border-radius:15px;border:1px solid rgba(237,246,243,.12);background:rgba(255,255,255,.04);
+  display:flex;align-items:center;justify-content:center;flex:none}
+.air-head b{font-size:20px;letter-spacing:-.02em;display:block}
+.air-head .sub{font-size:14px;color:var(--mut)}
+.air-strike{display:inline-flex;align-items:center;gap:11px;padding:13px 18px;border-radius:12px;background:rgba(0,0,0,.3);
+  border:1px solid rgba(237,246,243,.07);font-size:14px;font-weight:500;color:var(--mut);width:max-content;max-width:100%}
+.air-mid{position:relative;display:flex;align-items:center;justify-content:center}
+.air-mid::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:1px;background:var(--line)}
+.air-lock{position:relative;z-index:2;width:64px;height:64px;border-radius:50%;background:var(--bg);border:1px solid rgba(70,203,142,.4);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 0 44px rgba(70,203,142,.2);animation:lockPulse 3s ease-in-out infinite}
+@keyframes lockPulse{0%,100%{box-shadow:0 0 30px rgba(70,203,142,.15)}50%{box-shadow:0 0 54px rgba(70,203,142,.4)}}
+.air-right{position:relative;padding:clamp(28px,4vw,48px);display:flex;flex-direction:column;justify-content:center;gap:24px;
+  background:linear-gradient(90deg,rgba(10,22,24,.4),rgba(14,42,44,.5))}
+.air-right .sub{color:var(--green);font-weight:600}
+.air-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px}
+.air-stat{padding:18px 20px;border-radius:14px;border:1px solid rgba(70,203,142,.25);background:rgba(4,10,11,.6)}
+.air-stat b{font-size:30px;font-weight:700;letter-spacing:-.04em;display:block}
+.air-stat span{font-family:var(--fm);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--green);line-height:1.6}
+@media (max-width:880px){.airlock{grid-template-columns:1fr}.air-mid{min-height:84px}.air-mid::before{top:50%;bottom:auto;left:0;right:0;width:auto;height:1px}}
+.priv-notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:22px}
+.priv-note{padding:26px;border-radius:var(--r-md);border:1px solid var(--line);background:rgba(255,255,255,.02);
+  transition:transform .5s var(--easing),border-color .4s}
+.priv-note:hover{transform:translateY(-6px);border-color:rgba(47,180,168,.45)}
+.priv-note .pico{width:44px;height:44px;border-radius:13px;background:rgba(47,180,168,.1);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.priv-note h4{font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:7px}
+.priv-note p{font-size:15px;color:var(--mut)}
+.priv-quote{margin-top:22px;padding:26px 30px;border-radius:var(--r-md);border:1px solid var(--line);
+  background:rgba(255,255,255,.02);display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.priv-quote p{flex:1;min-width:250px;font-size:16.5px;color:var(--mut)}
+.priv-quote p strong{color:var(--ink)}
+
+/* ============ PANEL (horizontal) ============ */
+.sec-panel{overflow:hidden}
+.panel-pin{display:flex;flex-direction:column;justify-content:center;min-height:100svh;padding:90px 0 40px;gap:clamp(34px,5vh,60px)}
+.panel-head{width:min(1280px,calc(100% - clamp(40px,8vw,128px)));margin-inline:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.panel-track{display:flex;gap:clamp(16px,2vw,28px);padding-left:max(calc((100vw - 1280px)/2),clamp(20px,4vw,64px));padding-right:8vw;width:max-content}
+.pcard{width:min(520px,78vw);flex:none;border-radius:var(--r-lg);border:1px solid rgba(237,246,243,.1);
+  background:linear-gradient(165deg,rgba(13,28,30,.9),rgba(6,13,14,.95));padding:clamp(26px,3vw,40px);
+  display:flex;flex-direction:column;gap:18px;min-height:280px;justify-content:flex-start;
+  transition:border-color .4s}
+.pcard:hover{border-color:rgba(47,180,168,.4)}
+.pcard .mono{color:var(--teal)}
+.pcard h3{font-size:clamp(24px,2.6vw,34px);font-weight:700;letter-spacing:-.03em}
+.pcard p{color:var(--mut);font-size:16px;max-width:46ch}
+@media (max-width:960px){
+  .panel-pin{min-height:0;padding:0}
+  .sec-panel .sec-pad-inner{padding:clamp(90px,12vw,160px) 0}
+  .panel-track{width:auto;flex-direction:column;padding:0;margin-top:44px}
+  .pcard{width:100%;min-height:0}
+}
+
+/* ============ PLANES ============ */
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:18px;margin-top:clamp(44px,6vw,70px);align-items:stretch}
+.plan{position:relative;display:flex;flex-direction:column;padding:32px 28px;border-radius:var(--r-lg);
+  border:1px solid var(--line);background:rgba(255,255,255,.02);transition:transform .5s var(--easing),border-color .4s,box-shadow .5s}
+.plan:hover{transform:translateY(-8px);border-color:rgba(47,180,168,.4);box-shadow:0 30px 60px -30px rgba(47,180,168,.35)}
+.plan .pname{font-family:var(--fm);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.plan .price{display:flex;align-items:baseline;gap:7px;margin:20px 0 4px}
+.plan .price b{font-size:52px;font-weight:700;letter-spacing:-.05em;line-height:1}
+.plan .price span{color:var(--dim);font-size:15px}
+.plan .pfor{font-size:14px;color:var(--dim);margin-bottom:22px}
+.plan ul{list-style:none;display:flex;flex-direction:column;gap:12px;flex:1}
+.plan li{display:flex;gap:11px;font-size:15px;color:var(--mut);line-height:1.45}
+.plan li::before{content:"→";color:var(--green);flex:none;font-family:var(--fm)}
+.plan .btn{margin-top:26px}
+.plan-pro{background:linear-gradient(var(--bg-3),var(--bg-3)) padding-box,linear-gradient(150deg,#2FB4A8,#46CB8E 45%,rgba(70,203,142,.1)) border-box;
+  border:1.5px solid transparent;box-shadow:0 30px 70px -30px rgba(47,180,168,.5)}
+.plan-pro .pname{color:var(--green)}
+.plan-badge{position:absolute;top:-13px;left:26px;font-family:var(--fm);font-size:10.5px;letter-spacing:.14em;font-weight:500;
+  color:#031310;background:var(--grad);padding:7px 13px;border-radius:99px;box-shadow:0 8px 24px -6px rgba(70,203,142,.6)}
+.plans-note{margin-top:26px;display:flex;align-items:center;gap:12px;color:var(--dim);font-size:15px;flex-wrap:wrap}
+.plans-note::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green);flex:none}
+
+/* ============ SOBRE (light) ============ */
+.sec-sobre{background:#EAF3EF;color:#0C2724;border-radius:clamp(24px,4vw,48px);margin:0 clamp(10px,1.6vw,24px);overflow:hidden}
+.sec-sobre .sec-tag{color:#0C6E6A}
+.sec-sobre .sec-tag .idx{color:#7C9793}
+.sec-sobre .h2{color:#0A3532}
+.sec-sobre .h2 .serif{color:#0C6E6A}
+.sec-sobre .lead{color:#3B5854}
+.sobre-vals{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:clamp(40px,5vw,60px)}
+.sval{background:#fff;border:1px solid #D3E2DD;border-radius:var(--r-md);padding:26px;transition:transform .5s var(--easing),box-shadow .5s}
+.sval:hover{transform:translateY(-6px);box-shadow:0 24px 44px -26px rgba(12,110,106,.4)}
+.sval b{display:block;font-size:20px;letter-spacing:-.02em;color:#0C6E6A;margin-bottom:8px}
+.sval b.alt{color:#0A3532}
+.sval p{font-size:15px;color:#3B5854;line-height:1.55}
+.sobre-a11y{margin-top:26px;background:#0A3532;color:#EAF3EF;border-radius:var(--r-md);padding:26px 30px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.sobre-a11y b{display:block;font-size:17px}
+.sobre-a11y span{color:#9FC5BF;font-size:14.5px}
+
+/* ============ CONTACTO ============ */
+.sec-contact{background:radial-gradient(900px 600px at 15% 10%,rgba(16,38,42,.6),transparent 60%)}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,5vw,70px);align-items:start;margin-top:clamp(44px,6vw,70px)}
+.clinks{display:flex;flex-direction:column;gap:14px;max-width:460px}
+.clink{display:flex;align-items:center;gap:16px;padding:19px 22px;border-radius:var(--r-md);border:1px solid var(--line);
+  background:rgba(255,255,255,.02);transition:transform .45s var(--easing),border-color .35s,background-color .35s}
+.clink:hover{transform:translateX(8px);border-color:rgba(47,180,168,.5);background:rgba(47,180,168,.06)}
+.clink .cico{width:48px;height:48px;border-radius:14px;background:rgba(70,203,142,.1);display:flex;align-items:center;justify-content:center;flex:none}
+.clink b{display:block;font-size:16.5px;letter-spacing:-.01em}
+.clink span{font-size:13.5px;color:var(--dim)}
+.clink .arr{margin-left:auto;color:var(--green);font-size:20px;transition:transform .35s var(--easing)}
+.clink:hover .arr{transform:translateX(6px)}
+.cloc{display:flex;align-items:center;gap:10px;color:var(--dim);font-family:var(--fm);font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin-top:10px}
+
+.form-card{position:relative;border-radius:var(--r-lg);border:1px solid rgba(237,246,243,.1);
+  background:linear-gradient(165deg,rgba(13,28,30,.85),rgba(6,13,14,.92));padding:clamp(26px,3.4vw,42px);overflow:hidden}
+.form-card::after{content:"";position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;
+  background:radial-gradient(circle,rgba(70,203,142,.16),transparent 65%);pointer-events:none}
+.form-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:26px}
+.form-head b{font-size:22px;letter-spacing:-.02em}
+.fld{position:relative;margin-bottom:18px}
+.fld label{display:block;font-family:var(--fm);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:9px}
+.fld input,.fld select,.fld textarea{width:100%;background:rgba(4,10,11,.6);border:1px solid var(--line);border-radius:14px;
+  padding:15px 16px;font-size:16px;color:var(--ink);outline:none;transition:border-color .3s,box-shadow .3s;appearance:none;-webkit-appearance:none}
+.fld textarea{resize:vertical;min-height:96px}
+.fld select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238FA8A5' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;cursor:pointer}
+.fld select option{background:var(--bg-2);color:var(--ink)}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:rgba(70,203,142,.6);box-shadow:0 0 0 4px rgba(70,203,142,.1)}
+.form-foot{font-size:13px;color:var(--dim);text-align:center;margin-top:14px}
+.form-ok{display:none;flex-direction:column;align-items:center;text-align:center;padding:44px 10px}
+.form-ok.show{display:flex}
+.form-card form.hide{display:none}
+.ok-badge{width:82px;height:82px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;
+  color:#031310;box-shadow:0 20px 50px -14px rgba(70,203,142,.6);animation:okPop .7s var(--easing) both}
+@keyframes okPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+.form-ok b{font-size:26px;letter-spacing:-.02em;margin:22px 0 8px}
+.form-ok p{color:var(--mut);max-width:34ch}
+@media (max-width:920px){.contact-grid{grid-template-columns:1fr}}
+
+/* ============ FOOTER ============ */
+footer{position:relative;padding:clamp(70px,9vw,120px) 0 34px;border-top:1px solid var(--line);background:#030708;overflow:hidden}
+.foot-word{position:relative;text-align:center;line-height:.78;user-select:none;pointer-events:none;margin-bottom:clamp(50px,7vw,90px)}
+.foot-word span{font-size:clamp(90px,19vw,300px);font-weight:700;letter-spacing:-.05em;
+  color:transparent;-webkit-text-stroke:1px rgba(237,246,243,.14)}
+.foot-word .fill{position:absolute;inset:0;-webkit-text-stroke:0;color:transparent;background:var(--grad);
+  -webkit-background-clip:text;background-clip:text;clip-path:inset(100% 0 0 0)}
+.foot-grid{display:flex;justify-content:space-between;gap:44px;flex-wrap:wrap}
+.foot-brand{max-width:340px}
+.foot-brand p{color:var(--dim);font-size:15px;margin-top:16px}
+.socials{display:flex;gap:10px;margin-top:22px}
+.socials a{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+  color:var(--mut);transition:all .3s}
+.socials a:hover{color:var(--green);border-color:rgba(70,203,142,.5);transform:translateY(-4px)}
+.foot-cols{display:flex;gap:60px;flex-wrap:wrap}
+.fcol{display:flex;flex-direction:column;gap:13px}
+.fcol .mono{color:var(--dim);margin-bottom:4px}
+.fcol a{font-size:15px;color:var(--mut);transition:color .25s,padding-left .25s}
+.fcol a:hover{color:var(--ink);padding-left:5px}
+.foot-note{margin-top:clamp(40px,5vw,60px);padding:16px 20px;border:1px solid var(--line);border-radius:14px;
+  display:flex;gap:12px;align-items:flex-start;color:var(--dim);font-size:13.5px}
+.foot-bottom{margin-top:26px;padding-top:24px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-family:var(--fm);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.foot-bottom a{color:var(--dim)}
+.foot-bottom a:hover{color:var(--ink)}
+
+/* ---- responsive hero ---- */
+@media (max-width:1020px){
+  .hero-grid{grid-template-columns:1fr;gap:56px}
+  .hero-media{max-width:520px}
+  .hero-media .frame{aspect-ratio:4/3.4}
+  .hero-datacard{left:14px;bottom:-24px}
+  .scroll-cue{display:none}
+}
+@media (max-width:640px){
+  .hero{padding-top:110px}
+  .hero-datacard{gap:14px;padding:16px 18px}
+  .hero-datacard .dnum{font-size:24px}
+  .ghost-num{opacity:.6}
+}
+</style>
 </head>
 <body>
-<x-dc>
-<helmet>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
-<style>
-  *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  html,body{margin:0;padding:0;background:#0B1416}
-  ::selection{background:#16A06B;color:#06231F}
-  input,textarea,select,button{font-family:inherit}
-  input::placeholder,textarea::placeholder{color:#5E7775}
-  a{text-decoration:none;color:inherit}
-  @keyframes rmRise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-  @keyframes rmBreathe{0%,100%{stroke-dashoffset:300}50%{stroke-dashoffset:228}}
-  @keyframes rmDot{0%,100%{opacity:1}50%{opacity:.2}}
-  @keyframes rmFloatUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
-  @keyframes rmFloatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-  @keyframes rmBadge{0%,100%{transform:translateY(0);box-shadow:0 0 0 0 rgba(70,203,142,.45)}50%{transform:translateY(-2px);box-shadow:0 0 0 8px rgba(70,203,142,0)}}
-  @keyframes rmGlowPulse{0%,100%{box-shadow:0 24px 50px -24px rgba(47,180,168,.4)}50%{box-shadow:0 24px 60px -20px rgba(47,180,168,.7)}}
-  /* --- scroll progress bar --- */
-  .rm-progress{position:fixed;top:0;left:0;height:3px;z-index:99;background:linear-gradient(90deg,#2FB4A8,#46CB8E,#2FB4A8);background-size:200% 100%;animation:rmShimmerBar 3s linear infinite;transform-origin:left;transform:scaleX(0);transition:none;pointer-events:none}
-  @keyframes rmShimmerBar{0%{background-position:200% 0}100%{background-position:-200% 0}}
-  /* --- animated section dividers --- */
-  .rm-divider{position:relative;height:1px;overflow:visible}
-  .rm-divider::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,#2FB4A8 30%,#46CB8E 50%,#2FB4A8 70%,transparent);opacity:.4;animation:rmDivGlow 4s ease-in-out infinite}
-  .rm-divider::after{content:"";position:absolute;top:-1px;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,rgba(70,203,142,.6),transparent);filter:blur(4px);animation:rmDivGlow 4s ease-in-out infinite}
-  @keyframes rmDivGlow{0%,100%{opacity:.25}50%{opacity:.7}}
-  /* --- floating orbs --- */
-  .rm-orb{position:absolute;border-radius:50%;pointer-events:none;filter:blur(60px);will-change:transform;opacity:0;transition:opacity 1.2s ease}
-  .rm-orb.rm-visible{opacity:1}
-  .rm-orb-1{width:280px;height:280px;background:radial-gradient(circle,rgba(47,180,168,.18),transparent 70%)}
-  .rm-orb-2{width:200px;height:200px;background:radial-gradient(circle,rgba(70,203,142,.15),transparent 70%)}
-  .rm-orb-3{width:320px;height:320px;background:radial-gradient(circle,rgba(47,180,168,.12),transparent 70%)}
-  /* --- reveal variants --- */
-  [data-reveal]{opacity:0;transform:translateY(32px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1),filter .8s cubic-bezier(.16,1,.3,1)}
-  [data-reveal-type="left"]{transform:translateX(-60px)}
-  [data-reveal-type="right"]{transform:translateX(60px)}
-  [data-reveal-type="scale"]{transform:scale(.88)}
-  [data-reveal-type="blur"]{filter:blur(12px);transform:translateY(18px)}
-  [data-reveal-type="rotate-left"]{transform:translateX(-50px) rotate(-3deg)}
-  [data-reveal-type="rotate-right"]{transform:translateX(50px) rotate(3deg)}
-  /* --- text gradient shimmer --- */
-  .rm-shimmer{background:linear-gradient(90deg,#46CB8E 0%,#2FB4A8 25%,#EAF2F0 50%,#2FB4A8 75%,#46CB8E 100%);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:rmTextShimmer 6s ease-in-out infinite}
-  @keyframes rmTextShimmer{0%{background-position:100% 0}50%{background-position:0% 0}100%{background-position:100% 0}}
-  /* --- section parallax wrapper --- */
-  .rm-section{position:relative;overflow:hidden}
-  /* ---- micro-interacciones / hover ---- */
-  .rm-card{transition:transform .4s cubic-bezier(.2,.7,.2,1),border-color .4s ease,box-shadow .4s ease,background-color .4s ease}
-  .rm-card:hover{transform:translateY(-6px);border-color:#2FB4A8!important;box-shadow:0 24px 48px -24px rgba(47,180,168,.45)}
-  .rm-card svg{transition:transform .4s cubic-bezier(.2,.7,.2,1)}
-  .rm-card:hover svg{transform:scale(1.12) translateY(-2px)}
-  .rm-card-light{transition:transform .4s cubic-bezier(.2,.7,.2,1),border-color .4s ease,box-shadow .4s ease}
-  .rm-card-light:hover{transform:translateY(-6px);border-color:#16A06B!important;box-shadow:0 22px 44px -24px rgba(12,110,106,.32)}
-  /* --- 3D card tilt --- */
-  .rm-tilt{transition:transform .4s cubic-bezier(.2,.7,.2,1),border-color .4s ease,box-shadow .4s ease,background-color .4s ease;transform-style:preserve-3d;perspective:800px}
-  .rm-btn{position:relative;overflow:hidden;transition:transform .25s cubic-bezier(.2,.7,.2,1),filter .25s ease,box-shadow .25s ease}
-  .rm-btn:hover{transform:translateY(-2px);filter:brightness(1.07)}
-  .rm-btn:active{transform:translateY(0) scale(.98)}
-  .rm-btn::after{content:"";position:absolute;top:0;left:-130%;width:55%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.32),transparent);transform:skewX(-18deg);transition:left .65s ease;pointer-events:none}
-  .rm-btn:hover::after{left:150%}
-  .rm-link{transition:border-color .3s ease,transform .3s ease,background-color .3s ease}
-  .rm-link:hover{border-color:#2FB4A8!important;transform:translateX(4px);background:#13262A!important}
-  .rm-arrow{display:inline-block;transition:transform .3s ease}
-  .rm-link:hover .rm-arrow{transform:translateX(6px)}
-  .rm-cue{transition:transform .3s ease;cursor:pointer}
-  .rm-cue:hover{transform:scale(1.05)}
-  .rm-floaty{animation:rmFloatY 3.4s ease-in-out infinite}
-  .rm-pro{animation:rmGlowPulse 4.5s ease-in-out infinite}
-  .rm-badge{animation:rmBadge 2.8s ease-in-out infinite}
-  nav[data-desk] a{transition:color .25s ease,background-color .25s ease}
-  nav[data-desk] a:not(:last-child):hover{color:#EAF2F0!important;background:rgba(255,255,255,.06)}
-  .rm-social{transition:color .25s ease,border-color .25s ease,transform .25s ease}
-  .rm-social:hover{color:#46CB8E!important;border-color:#2FB4A8!important;transform:translateY(-3px)}
-  .rm-fcol a{transition:color .2s ease,padding-left .2s ease}
-  .rm-fcol a:hover{color:#EAF2F0!important;padding-left:5px}
-  [data-burger]{display:none}
-  @media (max-width:920px){
-    [data-desk]{display:none!important}
-    [data-burger]{display:flex!important}
-  }
-  @media (max-width:640px){
-    [data-hide-sm]{display:none!important}
-    .rm-orb{display:none!important}
-  /* @media (prefers-reduced-motion: reduce) removed to force animations */
-</style>
-</helmet>
 
-<div style="background:#0B1416;color:#EAF2F0;font-family:'Hanken Grotesk',system-ui,sans-serif;overflow-x:hidden">
-
-  <!-- ============ HEADER ============ -->
-  <header data-header style="position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:16px clamp(20px,5vw,56px);border-bottom:1px solid transparent;background:rgba(11,20,22,0);transition:background .35s ease,backdrop-filter .35s ease,border-color .35s ease">
-    <a href="#top" style="display:flex;align-items:center;gap:11px;color:#EAF2F0">
-      <svg width="34" height="34" viewBox="0 0 100 100" style="flex:none"><circle cx="50" cy="50" r="36" fill="none" stroke="#1A3034" stroke-width="9"/><circle cx="50" cy="50" r="36" fill="none" stroke="url(#gHd)" stroke-width="9" stroke-linecap="round" stroke-dasharray="226" stroke-dashoffset="58" transform="rotate(-90 50 50)"/><path d="M35 51 Q50 67 65 51" fill="none" stroke="#EAF2F0" stroke-width="6" stroke-linecap="round"/><defs><linearGradient id="gHd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2FB4A8"/><stop offset="1" stop-color="#46CB8E"/></linearGradient></defs></svg>
-      <span style="font-weight:800;font-size:22px;letter-spacing:-.4px">Rimay</span>
-      <span data-hide-sm style="font-size:12px;color:#5E7775;font-weight:600;border-left:1px solid #243A3F;padding-left:11px;margin-left:1px;white-space:nowrap">Terapia del habla</span>
-    </a>
-    <nav data-desk style="display:flex;align-items:center;gap:4px;background:rgba(20,34,37,.4);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.07);border-radius:999px;padding:6px 6px 6px 14px;white-space:nowrap">
-      <a href="#como" style="font-size:14.5px;font-weight:500;color:#9FB6B4;padding:9px 14px;border-radius:999px;white-space:nowrap">Cómo funciona</a>
-      <a href="#privacidad" style="font-size:14.5px;font-weight:500;color:#9FB6B4;padding:9px 14px;border-radius:999px;white-space:nowrap">Privacidad</a>
-      <a href="#planes" style="font-size:14.5px;font-weight:500;color:#9FB6B4;padding:9px 14px;border-radius:999px;white-space:nowrap">Planes</a>
-      <a href="#sobre" style="font-size:14.5px;font-weight:500;color:#9FB6B4;padding:9px 14px;border-radius:999px;white-space:nowrap">Sobre Rimay</a>
-      <a href="#contacto" class="rm-btn" style="font-size:14.5px;font-weight:700;color:#06231F;background:linear-gradient(135deg,#2FB4A8,#46CB8E);padding:11px 20px;border-radius:999px;margin-left:4px;white-space:nowrap">Prueba gratis</a>
-    </nav>
-    <button data-burger onClick="{{ toggleMenu }}" aria-label="Menú" style="width:46px;height:46px;border-radius:13px;border:1px solid rgba(255,255,255,.12);background:rgba(20,34,37,.5);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#EAF2F0;align-items:center;justify-content:center">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-    </button>
-  </header>
-
-  <!-- scroll progress bar -->
-  <div class="rm-progress" data-progress></div>
-
-  <!-- mobile menu -->
-  <div onClick="{{ closeMenu }}" style="position:fixed;inset:0;z-index:55;background:rgba(7,16,15,.5);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);transition:opacity .3s;opacity:{{ menuScrimStyle.opacity }};pointer-events:{{ menuScrimStyle.pointerEvents }}"></div>
-  <div style="position:fixed;top:0;right:0;bottom:0;z-index:56;width:min(86%,360px);background:#0D1719;border-left:1px solid #1E3034;box-shadow:-20px 0 60px rgba(0,0,0,.5);transition:transform .42s cubic-bezier(.22,1,.36,1);transform:{{ menuPanelStyle.transform }};display:flex;flex-direction:column;padding:88px 30px 30px">
-    <a href="#como" onClick="{{ closeMenu }}" style="font-size:23px;font-weight:700;color:#EAF2F0;padding:18px 0;border-bottom:1px solid #1A2C2F">Cómo funciona</a>
-    <a href="#privacidad" onClick="{{ closeMenu }}" style="font-size:23px;font-weight:700;color:#EAF2F0;padding:18px 0;border-bottom:1px solid #1A2C2F">Privacidad</a>
-    <a href="#planes" onClick="{{ closeMenu }}" style="font-size:23px;font-weight:700;color:#EAF2F0;padding:18px 0;border-bottom:1px solid #1A2C2F">Planes</a>
-    <a href="#sobre" onClick="{{ closeMenu }}" style="font-size:23px;font-weight:700;color:#EAF2F0;padding:18px 0;border-bottom:1px solid #1A2C2F">Sobre Rimay</a>
-    <a href="#contacto" onClick="{{ closeMenu }}" style="font-size:23px;font-weight:700;color:#EAF2F0;padding:18px 0;border-bottom:1px solid #1A2C2F">Contacto</a>
-    <a href="#contacto" onClick="{{ closeMenu }}" class="rm-btn" style="margin-top:26px;text-align:center;font-size:18px;font-weight:700;color:#06231F;background:linear-gradient(135deg,#2FB4A8,#46CB8E);padding:16px;border-radius:14px">Prueba gratis</a>
-  </div>
-
-  <!-- ============ HERO ============ -->
-  <section id="top" class="rm-section" style="position:relative;min-height:100svh;overflow:hidden;display:flex;align-items:center;background:radial-gradient(circle at 66% 38%,#11302E,#0B1416 62%)">
-    <video data-bgvideo autoplay muted loop playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:74% 36%;display:block;background:#0B1416">
-      <source src="uploads/video1.mp4" type="video/mp4">
-    </video>
-    <div style="position:absolute;inset:0;background:radial-gradient(125% 125% at 52% 48%,rgba(11,20,22,0) 38%,rgba(11,20,22,.62) 100%);pointer-events:none"></div>
-    <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(11,20,22,.97) 0%,rgba(11,20,22,.85) 32%,rgba(11,20,22,.2) 64%,rgba(11,20,22,.4) 100%);pointer-events:none"></div>
-    <div style="position:absolute;left:0;right:0;top:0;height:150px;background:linear-gradient(rgba(11,20,22,.88),rgba(11,20,22,0));pointer-events:none"></div>
-    <div style="position:absolute;left:0;right:0;bottom:0;height:300px;background:linear-gradient(transparent,rgba(11,20,22,.96));pointer-events:none"></div>
-    <!-- hero floating orbs -->
-    <div class="rm-orb rm-orb-1 rm-visible" data-parallax="0.03" style="top:15%;right:18%"></div>
-    <div class="rm-orb rm-orb-2 rm-visible" data-parallax="0.05" style="bottom:22%;right:36%"></div>
-
-    <div style="position:relative;z-index:3;max-width:760px;margin-left:clamp(20px,5vw,64px);margin-right:20px;padding-top:60px">
-      <div style="font-size:clamp(12px,1.4vw,14px);letter-spacing:2.2px;text-transform:uppercase;color:#46CB8E;font-weight:700;margin-bottom:22px;animation:rmRise .8s .05s both cubic-bezier(.2,.7,.2,1)">Apoyo a la terapia del habla · post-ACV</div>
-      <h1 style="font-size:clamp(38px,7vw,70px);line-height:1.03;margin:0;font-weight:800;letter-spacing:-2px;color:#EAF2F0;animation:rmRise .8s .12s both cubic-bezier(.2,.7,.2,1)">Cada repetición cuenta.<br>Y tu terapeuta lo <span class="rm-shimmer">ve</span>.</h1>
-      <p style="font-size:clamp(17px,2.1vw,21px);line-height:1.55;color:#9FB6B4;margin:26px 0 0;max-width:560px;animation:rmRise .8s .2s both cubic-bezier(.2,.7,.2,1)">Rimay te acompaña en cada repetición y mide tu avance respecto a tu propio punto de partida — para que tu fonoaudiólogo siga de cerca tu constancia, sin reemplazar nunca su criterio.</p>
-      <div style="display:flex;align-items:center;gap:14px;margin-top:34px;flex-wrap:wrap;animation:rmRise .8s .28s both cubic-bezier(.2,.7,.2,1)">
-        <a href="#contacto" class="rm-btn" style="font-size:17px;font-weight:700;color:#06231F;background:linear-gradient(135deg,#2FB4A8,#46CB8E);padding:15px 28px;border-radius:999px">Prueba gratis</a>
-        <a href="#como" class="rm-btn" style="font-size:17px;font-weight:600;color:#EAF2F0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.2);padding:14px 26px;border-radius:999px">Ver cómo funciona</a>
-      </div>
-      <div style="display:flex;gap:18px;margin-top:30px;font-size:13.5px;color:#7E9896;font-weight:600;flex-wrap:wrap;animation:rmRise .8s .36s both cubic-bezier(.2,.7,.2,1)">
-        <span>Sin hardware</span><span style="color:#33514D">·</span><span>Privacidad por diseño</span><span style="color:#33514D">·</span><span>Accesibilidad &gt; WCAG AA</span>
-      </div>
-    </div>
-
-    <a href="#como" data-hide-sm class="rm-cue" style="position:absolute;right:44px;bottom:46px;z-index:4;display:flex;align-items:center;gap:11px;color:#EAF2F0;animation:rmRise .8s .5s both cubic-bezier(.2,.7,.2,1)">
-      <span class="rm-floaty" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.16);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="#EAF2F0"><path d="M8 5v14l11-7z"/></svg></span>
-      <span style="font-size:14.5px;font-weight:600;color:#EAF2F0">Conoce Rimay</span>
-      <span style="font-size:14.5px;color:#7E9896">1:20</span>
-    </a>
-  </section>
-
-  <!-- divider hero → problema -->
-  <div class="rm-divider"></div>
-
-  <!-- ============ EL PROBLEMA ============ -->
-  <section id="problema" class="rm-section" style="scroll-margin-top:72px;padding:clamp(48px,7vw,80px) clamp(20px,6vw,110px);position:relative">
-    <div class="rm-orb rm-orb-3" data-parallax="0.02" style="top:-80px;left:-120px"></div>
-    <div style="max-width:1180px;margin:0 auto">
-      <div data-reveal data-reveal-type="left" style="font-size:14px;letter-spacing:2.2px;text-transform:uppercase;color:#5E7775;font-weight:700">El reto</div>
-      <h2 data-reveal data-reveal="40" data-reveal-type="blur" style="font-size:clamp(30px,5vw,52px);line-height:1.06;margin:16px 0 0;font-weight:800;letter-spacing:-1.4px;max-width:880px">La terapia del habla se gana en casa, entre sesiones.</h2>
-      <p data-reveal data-reveal="80" style="font-size:clamp(17px,2vw,21px);line-height:1.55;color:#9FB6B4;margin:22px 0 0;max-width:760px">Tras un ACV, el avance depende de la práctica facial diaria. Pero al salir del consultorio, el paciente queda sin guía y el terapeuta, sin datos.</p>
-
-      <div style="display:flex;gap:20px;margin-top:40px;flex-wrap:wrap">
-        <div data-reveal data-reveal-type="left" class="rm-card rm-tilt" style="flex:1 1 280px;background:#101D20;border:1px solid #243A3F;border-radius:20px;padding:34px">
-          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#E2A23E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h3l2-5 4 14 3-9 2 4h4"/></svg>
-          <div style="font-size:25px;font-weight:800;margin:20px 0 10px;letter-spacing:-.4px">Adherencia frágil</div>
-          <div style="font-size:17px;color:#9FB6B4;line-height:1.55">Los ejercicios se abandonan entre citas. Sin acompañamiento ni recordatorios, la constancia se pierde.</div>
-        </div>
-        <div data-reveal data-reveal="90" data-reveal-type="scale" class="rm-card rm-tilt" style="flex:1 1 280px;background:#101D20;border:1px solid #243A3F;border-radius:20px;padding:34px">
-          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#2FB4A8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.4"/><circle cx="12" cy="12" r="0.7" fill="#2FB4A8"/></svg>
-          <div style="font-size:25px;font-weight:800;margin:20px 0 10px;letter-spacing:-.4px">Progreso a ciegas</div>
-          <div style="font-size:17px;color:#9FB6B4;line-height:1.55">El avance se juzga de oído, sin registro. Sin un punto de partida claro, cuesta ver la constancia y ajustar la práctica.</div>
-        </div>
-        <div data-reveal data-reveal="180" data-reveal-type="right" class="rm-card rm-tilt" style="flex:1 1 280px;background:#101D20;border:1px solid #243A3F;border-radius:20px;padding:34px">
-          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#46CB8E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5-7-11a7 7 0 0 1 14 0c0 6-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>
-          <div style="font-size:25px;font-weight:800;margin:20px 0 10px;letter-spacing:-.4px">Distancia y acceso</div>
-          <div style="font-size:17px;color:#9FB6B4;line-height:1.55">En Cuenca y Ecuador, llegar a terapia cuesta tiempo y dinero. Una herramienta que mida y acompañe en casa llena ese vacío.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- divider problema → cómo funciona -->
-  <div class="rm-divider"></div>
-
-  <!-- ============ CÓMO FUNCIONA ============ -->
-  <section id="como" class="rm-section" style="scroll-margin-top:72px;padding:clamp(48px,7vw,80px) clamp(20px,6vw,110px);background:radial-gradient(circle at 80% 10%,#10262A,#0B1416 60%);position:relative">
-    <div class="rm-orb rm-orb-1" data-parallax="0.04" style="top:10%;right:-60px"></div>
-    <div class="rm-orb rm-orb-2" data-parallax="0.025" style="bottom:5%;left:-80px"></div>
-    <div style="max-width:1180px;margin:0 auto">
-      <div data-reveal data-reveal-type="left" style="font-size:14px;letter-spacing:2.2px;text-transform:uppercase;color:#46CB8E;font-weight:700">Cómo funciona</div>
-      <h2 data-reveal data-reveal="40" data-reveal-type="blur" style="font-size:clamp(30px,5vw,52px);line-height:1.06;margin:16px 0 0;font-weight:800;letter-spacing:-1.4px;max-width:880px">Biofeedback bimodal. Solo cuenta lo real.</h2>
-      <p data-reveal data-reveal="80" style="font-size:clamp(17px,2vw,21px);line-height:1.55;color:#9FB6B4;margin:22px 0 0;max-width:820px">La cámara mide el movimiento facial. El micrófono confirma la voz. La <strong style="color:#C9DAD7">compuerta AND</strong> une las dos señales: una repetición vale solo si ocurren a la vez — nunca la mímica muda.</p>
-
-      <div style="display:flex;gap:34px;margin-top:40px;flex-wrap:wrap;align-items:stretch">
-        <!-- live viewport -->
-        <div data-reveal data-reveal-type="left" style="flex:1 1 440px;position:relative;min-height:420px;border-radius:22px;overflow:hidden;border:1px solid #24393E;background:#0A1517">
-          <video id="sim-video" data-bgvideo autoplay muted loop playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 40%;display:block;background:#0A1517"><source src="uploads/video4.mp4" type="video/mp4"></video>
-          <div style="position:absolute;inset:0;background:radial-gradient(130% 100% at 50% 42%,rgba(10,21,23,0) 45%,rgba(10,21,23,.5) 100%);pointer-events:none"></div>
-          <div style="position:absolute;top:16px;left:16px;display:flex;align-items:center;gap:8px;background:rgba(10,21,23,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(70,203,142,.3);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;color:#46CB8E"><span style="width:8px;height:8px;border-radius:50%;background:#46CB8E;animation:rmDot 1.6s infinite"></span>Rostro detectado</div>
-          <div style="position:absolute;top:16px;right:16px;display:flex;align-items:center;gap:8px;font-family:'Hanken Grotesk',monospace;font-size:12px;font-weight:700;color:#9FB6B4"><span style="width:8px;height:8px;border-radius:50%;background:#E0726B;animation:rmDot 1.2s infinite"></span>EN VIVO · <span id="sim-fps">0.67</span></div>
-          <div style="position:absolute;left:16px;right:16px;bottom:16px;background:rgba(10,21,23,.78);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid #24393E;border-radius:16px;padding:16px 18px;transition:border-color 0.3s ease" id="sim-card">
-            <div style="display:flex;align-items:center;gap:12px">
-              <div style="display:flex;gap:8px;flex:1;flex-wrap:wrap">
-                <span id="sim-mov" style="display:inline-flex;align-items:center;gap:7px;background:#11302E;border:1px solid #1F4A40;color:#46CB8E;font-size:13.5px;font-weight:700;padding:8px 13px;border-radius:10px;transition:all 0.3s ease"><span style="width:16px;height:16px;border-radius:50%;background:#16A06B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px">✓</span>Movimiento</span>
-                <span id="sim-voz" style="display:inline-flex;align-items:center;gap:7px;background:#11302E;border:1px solid #1F4A40;color:#46CB8E;font-size:13.5px;font-weight:700;padding:8px 13px;border-radius:10px;transition:all 0.3s ease"><span style="width:16px;height:16px;border-radius:50%;background:#16A06B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px">✓</span>Voz</span>
-              </div>
-              <div style="position:relative;width:54px;height:54px;flex:none">
-                <svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="21" fill="none" stroke="#1A3034" stroke-width="6"/><circle id="sim-circle" cx="27" cy="27" r="21" fill="none" stroke="#46CB8E" stroke-width="6" stroke-linecap="round" stroke-dasharray="132" stroke-dashoffset="132" transform="rotate(-90 27 27)" style="transition:stroke-dashoffset 0.2s linear"/></svg>
-                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#EAF2F0" id="sim-pct">0%</div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:9px;margin-top:13px;padding-top:13px;border-top:1px solid #1B2F34"><span style="font-size:13px;color:#7E9896">Movimiento + voz a la vez</span><span style="color:#46CB8E;font-size:15px;transition:opacity 0.3s ease" id="sim-arrow">→</span><span style="font-size:13.5px;font-weight:800;color:#46CB8E;opacity:0;transition:opacity 0.3s ease" id="sim-valid">Repetición válida</span></div>
-          </div>
-        </div>
-
-        <!-- steps -->
-        <div style="flex:1 1 360px;display:flex;flex-direction:column;gap:16px">
-          <div data-reveal data-reveal="60" data-reveal-type="right" class="rm-card" style="display:flex;gap:18px;align-items:flex-start;background:#101D20;border:1px solid #243A3F;border-radius:18px;padding:24px 26px">
-            <span style="width:48px;height:48px;border-radius:13px;background:#0E2A2C;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2FB4A8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><circle cx="12" cy="12.5" r="3.4"/><path d="M8 6l1.5-2h5L16 6"/></svg></span>
-            <div><div style="font-size:20px;font-weight:800">La cámara mide</div><div style="font-size:16px;color:#9FB6B4;line-height:1.5;margin-top:5px">Apertura, simetría y rango del rostro, cuadro a cuadro.</div></div>
-          </div>
-          <div data-reveal data-reveal="130" data-reveal-type="right" class="rm-card" style="display:flex;gap:18px;align-items:flex-start;background:#101D20;border:1px solid #243A3F;border-radius:18px;padding:24px 26px">
-            <span style="width:48px;height:48px;border-radius:13px;background:#0E2A2C;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2FB4A8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3Z"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></span>
-            <div><div style="font-size:20px;font-weight:800">El micrófono confirma</div><div style="font-size:16px;color:#9FB6B4;line-height:1.5;margin-top:5px">Verifica la fonación: que de verdad se está produciendo voz.</div></div>
-          </div>
-          <div data-reveal data-reveal="200" data-reveal-type="right" class="rm-card" style="display:flex;gap:18px;align-items:flex-start;background:#0E2A2C;border:1px solid #1F4A40;border-radius:18px;padding:24px 26px">
-            <span style="width:48px;height:48px;border-radius:13px;background:#11302E;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#46CB8E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
-            <div><div style="font-size:20px;font-weight:800;color:#EAF2F0">La compuerta AND decide</div><div style="font-size:16px;color:#C9DAD7;line-height:1.5;margin-top:5px">Las dos señales a la vez = repetición válida. Tu terapeuta recibe un registro objetivo de tu práctica.</div></div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- divider cómo funciona → privacidad -->
-  <div class="rm-divider"></div>
-
-  <!-- ============ PRIVACIDAD ============ -->
-  <section id="privacidad" class="rm-section" style="scroll-margin-top:72px;padding:clamp(48px,7vw,80px) clamp(20px,6vw,110px);background:radial-gradient(circle at 50% 118%,#0F2A2A,#0B1416 60%);position:relative">
-    <div class="rm-orb rm-orb-3" data-parallax="0.03" style="top:20%;right:-100px"></div>
-    <div style="max-width:1180px;margin:0 auto">
-      <div data-reveal data-reveal-type="left" style="font-size:14px;letter-spacing:2.2px;text-transform:uppercase;color:#46CB8E;font-weight:700">Privacidad</div>
-      <h2 data-reveal data-reveal="40" data-reveal-type="blur" style="font-size:clamp(30px,5vw,52px);line-height:1.06;margin:16px 0 0;font-weight:800;letter-spacing:-1.4px;max-width:920px">Tu cara y tu voz <span style="color:#46CB8E">nunca salen</span> de tu dispositivo.</h2>
-      <p data-reveal data-reveal="80" style="font-size:clamp(17px,2vw,21px);line-height:1.55;color:#9FB6B4;margin:22px 0 0;max-width:840px">Privacidad por diseño: <strong style="color:#C9DAD7">no podemos filtrar lo que nunca recibimos.</strong> El análisis del movimiento y la voz ocurre en tu propio equipo; solo viajan los resultados.</p>
-
-      <style>
-        @keyframes rmFlow { 0% { transform:translateX(0); opacity:1 } 100% { transform:translateX(60px); opacity:0 } }
-      </style>
-      <div style="margin-top:40px">
-        <!-- El Filtro de Cristal (Diagram) -->
-        <div data-reveal data-reveal-type="scale" style="position:relative;border-radius:24px;border:1px solid #24393E;background:#0A1517;overflow:hidden;display:flex;align-items:stretch;min-height:340px;margin-bottom:34px;flex-wrap:wrap">
-          
-          <!-- Lado Izquierdo: Dispositivo (Vidrio Esmerilado) -->
-          <div style="flex:1 1 300px;position:relative;padding:40px;display:flex;flex-direction:column;justify-content:center;overflow:hidden">
-            <!-- Formas borrosas simulando video y rostro -->
-            <div style="position:absolute;top:10%;left:15%;width:180px;height:180px;background:#E0726B;border-radius:50%;filter:blur(60px);opacity:0.25;animation:rmFloat 6s ease-in-out infinite"></div>
-            <div style="position:absolute;bottom:5%;right:15%;width:220px;height:220px;background:#2FB4A8;border-radius:50%;filter:blur(70px);opacity:0.2;animation:rmFloat 8s ease-in-out infinite reverse"></div>
-            
-            <!-- Capa de Glassmorphism pesada -->
-            <div style="position:absolute;inset:0;background:rgba(10,21,23,0.3);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);z-index:1"></div>
-            
-            <!-- Contenido (sobre el vidrio) -->
-            <div style="position:relative;z-index:2;display:flex;flex-direction:column;gap:18px">
-              <div style="display:flex;align-items:center;gap:14px">
-                <span style="width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EAF2F0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span>
-                <div><div style="font-size:20px;font-weight:800;color:#EAF2F0">Tu dispositivo</div><div style="font-size:15px;color:#9FB6B4;margin-top:2px">Cámara y micrófono</div></div>
-              </div>
-              <div style="background:rgba(0,0,0,0.15);border:1px solid rgba(255,255,255,0.04);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;width:max-content;max-width:100%">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E0726B" stroke-width="1.7" style="flex:none"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L22 7v10"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
-                  <span style="font-size:14px;font-weight:700;color:#7E9896">Video y audio borrados en tiempo real</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Puente Central (Candado Verde) -->
-          <div style="width:1px;background:#1B2F34;position:relative;z-index:10;display:flex;align-items:center;justify-content:center;margin:0;min-height:2px">
-            <div style="position:absolute;width:60px;height:60px;background:#0A1517;border:1px solid #1F4A40;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px rgba(70,203,142,0.15)">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#46CB8E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 6px rgba(70,203,142,0.5))"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            </div>
-          </div>
-
-          <!-- Lado Derecho: Terapeuta (Limpio y Nítido) -->
-          <div style="flex:1 1 300px;position:relative;padding:40px;background:linear-gradient(90deg, #0C1A1C, #0E2A2C);display:flex;flex-direction:column;justify-content:center;gap:24px">
-            <div style="display:flex;align-items:center;gap:14px">
-              <span style="width:48px;height:48px;border-radius:14px;background:#11302E;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#46CB8E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></span>
-              <div><div style="font-size:20px;font-weight:800;color:#EAF2F0">Terapeuta</div><div style="font-size:15px;color:#46CB8E;font-weight:700;margin-top:2px">Recibe resultados matemáticos limpios</div></div>
-            </div>
-            
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:14px">
-              <div style="background:#0A1517;border:1px solid #1F4A40;padding:16px 20px;border-radius:14px;display:flex;flex-direction:column;gap:4px">
-                <span style="font-size:28px;font-weight:800;color:#EAF2F0;letter-spacing:-1px">24</span>
-                <span style="font-size:13.5px;color:#46CB8E;font-weight:700;line-height:1.2">Repeticiones<br>válidas</span>
-              </div>
-              <div style="background:#0A1517;border:1px solid #1F4A40;padding:16px 20px;border-radius:14px;display:flex;flex-direction:column;gap:4px">
-                <span style="font-size:28px;font-weight:800;color:#EAF2F0;letter-spacing:-1px">85<span style="font-size:18px">%</span></span>
-                <span style="font-size:13.5px;color:#46CB8E;font-weight:700;line-height:1.2">Simetría<br>facial</span>
-              </div>
-            </div>
-            
-            <!-- Líneas de datos animadas cruzando -->
-            <div style="position:absolute;top:50%;left:0;width:30px;height:1px;background:#46CB8E;box-shadow:0 0 8px #46CB8E;animation:rmFlow 1.5s infinite"></div>
-            <div style="position:absolute;top:60%;left:0;width:20px;height:1px;background:#46CB8E;box-shadow:0 0 8px #46CB8E;animation:rmFlow 2s infinite 0.5s"></div>
-          </div>
-        </div>
-
-        <!-- tres ideas de apoyo -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:20px">
-          <div data-reveal data-reveal="60" data-reveal-type="left" class="rm-card rm-tilt" style="background:#101D20;border:1px solid #243A3F;border-radius:20px;padding:26px">
-            <span style="width:42px;height:42px;border-radius:12px;background:#0E2A2C;display:flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2FB4A8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></svg></span>
-            <div style="font-size:19px;font-weight:800">Procesado en tu equipo</div>
-            <div style="font-size:15px;color:#9FB6B4;line-height:1.5;margin-top:8px">El movimiento y la voz se analizan localmente en tu propio teléfono o computador, no en la nube.</div>
-          </div>
-          <div data-reveal data-reveal="130" data-reveal-type="scale" class="rm-card rm-tilt" style="background:#101D20;border:1px solid #243A3F;border-radius:20px;padding:26px">
-            <span style="width:42px;height:42px;border-radius:12px;background:#0E2A2C;display:flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2FB4A8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 20h14"/></svg></span>
-            <div style="font-size:19px;font-weight:800">Solo viajan resultados</div>
-            <div style="font-size:15px;color:#9FB6B4;line-height:1.5;margin-top:8px">Se envían cifras matemáticas, como repeticiones y ángulos de simetría. Nunca tu video ni tu audio.</div>
-          </div>
-          <div data-reveal data-reveal="200" data-reveal-type="right" class="rm-card rm-tilt" style="background:#0E2A2C;border:1px solid #1F4A40;border-radius:20px;padding:26px">
-            <span style="width:42px;height:42px;border-radius:12px;background:#11302E;display:flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#46CB8E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg></span>
-            <div style="font-size:19px;font-weight:800;color:#EAF2F0">Tú decides quién lo ve</div>
-            <div style="font-size:15px;color:#C9DAD7;line-height:1.5;margin-top:8px">Tú y tu terapeuta deciden quién puede auditar tu progreso clínico. Absolutamente nadie más.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- cierre: la privacidad como cuidado -->
-      <div data-reveal data-reveal-type="scale" style="display:flex;align-items:center;gap:16px;margin-top:24px;background:#101D20;border:1px solid #243A3F;border-radius:16px;padding:20px 26px;flex-wrap:wrap">
-        <span style="width:42px;height:42px;border-radius:12px;background:#16282B;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#46CB8E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
-        <span style="font-size:16.5px;color:#C9DAD7;line-height:1.55;flex:1;min-width:240px"><strong style="color:#EAF2F0">La privacidad es parte del cuidado, no un extra técnico.</strong> Proteger los datos de alguien que se está recuperando es tratarlo con respeto — a él y a su familia.</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- divider privacidad → panel del terapeuta -->
-  <div class="rm-divider"></div>
-
-  <!-- ============ PANEL DEL TERAPEUTA ============ -->
-  <section id="panel" class="rm-section" style="scroll-margin-top:72px;padding:clamp(48px,7vw,80px) clamp(20px,6vw,110px);position:relative">
-    <div class="rm-orb rm-orb-2" data-parallax="0.04" style="top:15%;left:-80px"></div>
-    <div style="max-width:1180px;margin:0 auto">
-      <div data-reveal data-reveal-type="left" style="font-size:14px;letter-spacing:2.2px;text-transform:uppercase;color:#46CB8E;font-weight:700">El panel del terapeuta</div>
-      <h2 data-reveal data-reveal="40" data-reveal-type="blur" style="font-size:clamp(30px,5vw,52px);line-height:1.06;margin:16px 0 0;font-weight:800;letter-spacing:-1.4px;max-width:880px">Telemetría pura, renderizada en un Gemelo Digital 3D.</h2>
-      <p data-reveal data-reveal="80" style="font-size:clamp(17px,2vw,21px);line-height:1.55;color:#9FB6B4;margin:22px 0 0;max-width:840px">El terapeuta no necesita invadir el hogar del paciente con video. Rimay toma la matriz de datos enviados desde el navegador y reconstruye la sesión sobre un modelo anatómico tridimensional.</p>
-
-      <div style="display:flex;gap:20px;margin-top:40px;flex-wrap:wrap">
-        <div data-reveal data-reveal-type="left" class="rm-card rm-tilt" style="flex:1 1 280px;background:#101D20;border:1px solid #243A3F;border-radius:20px;padding:34px">
-          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#E0726B" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/><path d="M12 7v4"/></svg>
-          <div style="font-size:25px;font-weight:800;margin:20px 0 10px;letter-spacing:-.4px">Mapas de Calor</div>
-          <div style="font-size:17px;color:#9FB6B4;line-height:1.55">Visualiza la fatiga y el esfuerzo orofacial en zonas específicas.</div>
-        </div>
-        <div data-reveal data-reveal="90" data-reveal-type="scale" class="rm-card rm-tilt" style="flex:1 1 280px;background:#101D20;border:1px solid #243A3F;border-radius:20px;padding:34px">
-          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#2FB4A8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
-          <div style="font-size:25px;font-weight:800;margin:20px 0 10px;letter-spacing:-.4px">Análisis de Asimetría</div>
-          <div style="font-size:17px;color:#9FB6B4;line-height:1.55">Detecta milimétricamente la diferencia de rango de movimiento entre el lado izquierdo y derecho post-ACV.</div>
-        </div>
-        <div data-reveal data-reveal="180" data-reveal-type="right" class="rm-card rm-tilt" style="flex:1 1 280px;background:#101D20;border:1px solid #243A3F;border-radius:20px;padding:34px">
-          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#46CB8E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
-          <div style="font-size:25px;font-weight:800;margin:20px 0 10px;letter-spacing:-.4px">Historial Biomecánico</div>
-          <div style="font-size:17px;color:#9FB6B4;line-height:1.55">Reproduce sesiones pasadas desde cualquier ángulo para auditar la evolución de la disartria.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- divider terapeuta → planes -->
-  <div class="rm-divider"></div>
-
-  <!-- ============ PLANES ============ -->
-  <section id="planes" class="rm-section" style="scroll-margin-top:72px;padding:clamp(48px,7vw,80px) clamp(20px,6vw,110px);position:relative">
-    <div class="rm-orb rm-orb-2" data-parallax="0.035" style="top:-40px;right:10%"></div>
-    <div class="rm-orb rm-orb-1" data-parallax="0.02" style="bottom:10%;left:-100px"></div>
-    <div style="max-width:1200px;margin:0 auto">
-      <div data-reveal data-reveal-type="left" style="font-size:14px;letter-spacing:2.2px;text-transform:uppercase;color:#5E7775;font-weight:700">Planes</div>
-      <h2 data-reveal data-reveal="40" data-reveal-type="blur" style="font-size:clamp(30px,5vw,52px);line-height:1.06;margin:16px 0 0;font-weight:800;letter-spacing:-1.4px">Empieza gratis. Crece cuando lo necesites.</h2>
-      <p data-reveal data-reveal="80" style="font-size:clamp(17px,2vw,21px);line-height:1.55;color:#9FB6B4;margin:22px 0 0;max-width:720px">Suscripción mensual en USD. Todo corre en el navegador, sin aparatos: sumar un paciente más casi no cuesta.</p>
-
-      <div style="display:flex;gap:18px;margin-top:38px;flex-wrap:wrap;align-items:stretch">
-        <!-- Free -->
-        <div data-reveal data-reveal-type="rotate-left" class="rm-card" style="flex:1 1 240px;display:flex;flex-direction:column;background:#101D20;border:1px solid #243A3F;border-radius:22px;padding:30px">
-          <div style="font-size:20px;font-weight:800;color:#9FB6B4">Free</div>
-          <div style="display:flex;align-items:baseline;gap:6px;margin:16px 0 4px"><span data-reveal data-count="0" data-prefix="$" style="font-size:48px;font-weight:800;letter-spacing:-2px;color:#EAF2F0">$0</span></div>
-          <div style="font-size:15px;color:#7E9896;margin-bottom:20px">Para empezar</div>
-          <div style="display:flex;flex-direction:column;gap:11px;flex:1">
-            <div style="display:flex;gap:10px;font-size:15.5px;color:#C9DAD7;line-height:1.4"><span style="color:#46CB8E;flex:none">✓</span>1-2 pacientes activos</div>
-            <div style="display:flex;gap:10px;font-size:15.5px;color:#C9DAD7;line-height:1.4"><span style="color:#46CB8E;flex:none">✓</span>Ejercicios guiados</div>
-            <div style="display:flex;gap:10px;font-size:15.5px;color:#C9DAD7;line-height:1.4"><span style="color:#46CB8E;flex:none">✓</span>Biofeedback básico</div>
-          </div>
-          <a href="#contacto" class="rm-btn" style="margin-top:24px;text-align:center;font-size:16px;font-weight:700;color:#EAF2F0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.18);padding:13px;border-radius:13px">Prueba gratis</a>
-        </div>
-        <!-- Pro -->
-        <div data-reveal data-reveal="80" data-reveal-type="scale" class="rm-card rm-pro" style="flex:1 1 240px;display:flex;flex-direction:column;background:#0E2A2C;border:1.5px solid #2FB4A8;border-radius:22px;padding:30px;position:relative;box-shadow:0 24px 50px -24px rgba(47,180,168,.4)">
-          <div class="rm-badge" style="position:absolute;top:-13px;left:30px;font-size:12px;font-weight:800;letter-spacing:.5px;color:#06231F;background:#46CB8E;padding:6px 13px;border-radius:999px">MÁS POPULAR</div>
-          <div style="font-size:20px;font-weight:800;color:#2FB4A8">Pro</div>
-          <div style="display:flex;align-items:baseline;gap:6px;margin:16px 0 4px"><span data-reveal data-count="29" data-prefix="$" style="font-size:48px;font-weight:800;letter-spacing:-2px;color:#EAF2F0">$29</span><span style="font-size:17px;color:#7E9896;font-weight:700">/ mes</span></div>
-          <div style="font-size:15px;color:#7E9896;margin-bottom:20px">Por terapeuta</div>
-          <div style="display:flex;flex-direction:column;gap:11px;flex:1">
-            <div style="display:flex;gap:10px;font-size:15.5px;color:#C9DAD7;line-height:1.4"><span style="color:#46CB8E;flex:none">✓</span>Panel clínico completo</div>
-            <div style="display:flex;gap:10px;font-size:15.5px;color:#C9DAD7;line-height:1.4"><span style="color:#46CB8E;flex:none">✓</span>Planes versionados</div>
-            <div style="display:flex;gap:10px;font-size:15.5px;color:#C9DAD7;line-height:1.4"><span style="color:#46CB8E;flex:none">✓</span>Hasta 20 pacientes</div>
-            <div style="display:flex;gap:10px;font-size:15.5px;color:#C9DAD7;line-height:1.4"><span style="color:#46CB8E;flex:none">✓</span>Reportes objetivos</div>
-          </div>
-          <a href="#contacto" class="rm-btn" style="margin-top:24px;text-align:center;font-size:16px;font-weight:800;color:#06231F;background:linear-gradient(135deg,#2FB4A8,#46CB8E);padding:14px;border-radius:13px">Elegir Pro</a>
-        </div>
-        <!-- Premium -->
-        <div data-reveal data-reveal="160" data-reveal-type="scale" class="rm-card" style="flex:1 1 240px;display:flex;flex-direction:column;background:#101D20;border:1px solid #243A3F;border-radius:22px;padding:30px">
-          <div style="font-size:20px;font-weight:800;color:#46CB8E">Premium</div>
-          <div style="display:flex;align-items:baseline;gap:6px;margin:16px 0 4px"><span data-reveal data-count="59" data-prefix="$" style="font-size:48px;font-weight:800;letter-spacing:-2px;color:#EAF2F0">$59</span><span style="font-size:17px;color:#7E9896;font-weight:700">/ mes</span></div>
-          <div style="font-size:15px;color:#7E9896;margin-bottom:20px">Por terapeuta</div>
-          <div style="display:flex;flex-direction:column;gap:11px;flex:1">
-            <div style="display:flex;gap:10px;font-size:15.5px;color:#C9DAD7;line-height:1.4"><span style="color:#46CB8E;flex:none">✓</span>Todo lo de Pro</div>
-            <div style="display:flex;gap:10px;font-size:15.5px;color:#C9DAD7;line-height:1.4"><span style="color:#46CB8E;flex:none">✓</span>Gemelo digital 3D</div>
-            <div style="display:flex;gap:10px;font-size:15.5px;color:#C9DAD7;line-height:1.4"><span style="color:#46CB8E;flex:none">✓</span>Analítica de asimetría y fatiga</div>
-          </div>
-          <a href="#contacto" class="rm-btn" style="margin-top:24px;text-align:center;font-size:16px;font-weight:700;color:#EAF2F0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.18);padding:13px;border-radius:13px">Elegir Premium</a>
-        </div>
-        <!-- Clínica -->
-        <div data-reveal data-reveal="240" data-reveal-type="rotate-right" class="rm-card" style="flex:1 1 240px;display:flex;flex-direction:column;background:#101D20;border:1px solid #243A3F;border-radius:22px;padding:30px">
-          <div style="font-size:20px;font-weight:800;color:#9FB6B4">Clínica</div>
-          <div style="display:flex;align-items:baseline;gap:6px;margin:16px 0 4px"><span data-reveal data-count="149" data-prefix="$" style="font-size:48px;font-weight:800;letter-spacing:-2px;color:#EAF2F0">$149</span><span style="font-size:17px;color:#7E9896;font-weight:700">/ mes</span></div>
-          <div style="font-size:15px;color:#7E9896;margin-bottom:20px">Por institución</div>
-          <div style="display:flex;flex-direction:column;gap:11px;flex:1">
-            <div style="display:flex;gap:10px;font-size:15.5px;color:#C9DAD7;line-height:1.4"><span style="color:#46CB8E;flex:none">✓</span>Multi-terapeuta</div>
-            <div style="display:flex;gap:10px;font-size:15.5px;color:#C9DAD7;line-height:1.4"><span style="color:#46CB8E;flex:none">✓</span>Tablero institucional</div>
-            <div style="display:flex;gap:10px;font-size:15.5px;color:#C9DAD7;line-height:1.4"><span style="color:#46CB8E;flex:none">✓</span>Licencias IESS / universidades</div>
-            <div style="display:flex;gap:10px;font-size:15.5px;color:#C9DAD7;line-height:1.4"><span style="color:#46CB8E;flex:none">✓</span>Soporte dedicado</div>
-          </div>
-          <a href="#contacto" class="rm-btn" style="margin-top:24px;text-align:center;font-size:16px;font-weight:700;color:#EAF2F0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.18);padding:13px;border-radius:13px">Hablar con ventas</a>
-        </div>
-      </div>
-      <div data-reveal style="margin-top:24px;font-size:15.5px;color:#7E9896;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="width:8px;height:8px;border-radius:50%;background:#46CB8E;flex:none"></span>¿Eres paciente o familiar? Rimay se usa junto a tu fonoaudiólogo — escríbenos y te conectamos con uno.</div>
-    </div>
-  </section>
-
-  <!-- ============ CONTACTO ============ -->
-  <!-- divider planes → contacto -->
-  <div class="rm-divider"></div>
-
-  <section id="contacto" class="rm-section" style="scroll-margin-top:72px;padding:clamp(48px,7vw,80px) clamp(20px,6vw,110px);background:radial-gradient(circle at 20% 20%,#10262A,#0B1416 60%);position:relative">
-    <div class="rm-orb rm-orb-3" data-parallax="0.03" style="bottom:15%;right:-80px"></div>
-    <div style="max-width:1100px;margin:0 auto;display:flex;gap:46px;flex-wrap:wrap;align-items:flex-start">
-      <div style="flex:1 1 380px">
-        <div data-reveal data-reveal-type="left" style="font-size:14px;letter-spacing:2.2px;text-transform:uppercase;color:#46CB8E;font-weight:700">Contacto</div>
-        <h2 data-reveal data-reveal="40" data-reveal-type="blur" style="font-size:clamp(30px,5vw,50px);line-height:1.06;margin:16px 0 0;font-weight:800;letter-spacing:-1.4px">Agenda una demo o empieza gratis.</h2>
-        <p data-reveal data-reveal="80" data-reveal-type="left" style="font-size:clamp(17px,2vw,20px);line-height:1.55;color:#9FB6B4;margin:22px 0 30px;max-width:480px">Te mostramos cómo dar de alta a tu primer paciente y leer su primer reporte. Sin tarjeta.</p>
-        <div data-reveal data-reveal="120" data-reveal-type="left" style="display:flex;flex-direction:column;gap:14px;max-width:440px">
-          <a href="https://w.app/rimay" target="_blank" rel="noopener" class="rm-link" style="display:flex;align-items:center;gap:15px;background:#101D20;border:1px solid #243A3F;border-radius:16px;padding:18px 20px">
-            <span style="width:46px;height:46px;border-radius:13px;background:#11302E;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#46CB8E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a7.5 7.5 0 0 1-11 6.6L4.5 19.5l1.4-4.4A7.5 7.5 0 1 1 20 11.5Z"/><path d="M9 9.5c.5 2.5 2.5 4.5 5 5l1.3-1.3 1.7.8M9 9.5l-.8-1.7L9.5 6.5"/></svg></span>
-            <div style="flex:1"><div style="font-size:17px;font-weight:700;color:#EAF2F0">WhatsApp</div><div style="font-size:14px;color:#7E9896">Respuesta rápida · Lun a Vie</div></div>
-            <span class="rm-arrow" style="color:#46CB8E;font-size:20px">→</span>
-          </a>
-          <a href="mailto:contacto@rimay.dev" class="rm-link" style="display:flex;align-items:center;gap:15px;background:#101D20;border:1px solid #243A3F;border-radius:16px;padding:18px 20px">
-            <span style="width:46px;height:46px;border-radius:13px;background:#11302E;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#46CB8E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
-            <div style="flex:1"><div style="font-size:17px;font-weight:700;color:#EAF2F0">contacto@rimay.dev</div><div style="font-size:14px;color:#7E9896">Escríbenos cuando quieras</div></div>
-            <span class="rm-arrow" style="color:#46CB8E;font-size:20px">→</span>
-          </a>
-          <div style="display:flex;align-items:center;gap:12px;color:#7E9896;font-size:14.5px;margin-top:4px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7E9896" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5-7-11a7 7 0 0 1 14 0c0 6-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>Cuenca · Azuay · Ecuador</div>
-        </div>
-      </div>
-
-      <!-- form -->
-      <div data-reveal data-reveal="100" data-reveal-type="right" style="flex:1 1 380px;background:#101D20;border:1px solid #243A3F;border-radius:22px;padding:clamp(24px,3vw,34px)">
-        <sc-if value="{{ notSent }}" hint-placeholder-val="{{ true }}">
-          <form onSubmit="{{ onSubmit }}" style="display:flex;flex-direction:column;gap:16px">
-            <div style="font-size:19px;font-weight:800;margin-bottom:2px">Agenda tu demo</div>
-            <div>
-              <label style="display:block;font-size:13px;font-weight:700;color:#9FB6B4;margin-bottom:7px">Nombre</label>
-              <input value="{{ fName }}" onInput="{{ onName }}" placeholder="Tu nombre" style="width:100%;background:#0C181B;border:1px solid #243A3F;border-radius:12px;padding:14px 15px;font-size:16px;color:#EAF2F0;outline:none" style-focus="border-color:#2FB4A8">
-            </div>
-            <div>
-              <label style="display:block;font-size:13px;font-weight:700;color:#9FB6B4;margin-bottom:7px">¿Quién eres?</label>
-              <select value="{{ fRole }}" onChange="{{ onRole }}" style="width:100%;background:#0C181B;border:1px solid #243A3F;border-radius:12px;padding:14px 15px;font-size:16px;color:#EAF2F0;outline:none" style-focus="border-color:#2FB4A8">
-                <option value="">Selecciona una opción</option>
-                <option value="fono">Fonoaudiólogo/a</option>
-                <option value="clinica">Clínica o institución</option>
-                <option value="paciente">Paciente o familiar</option>
-                <option value="otro">Otro</option>
-              </select>
-            </div>
-            <div>
-              <label style="display:block;font-size:13px;font-weight:700;color:#9FB6B4;margin-bottom:7px">Correo</label>
-              <input value="{{ fEmail }}" onInput="{{ onEmail }}" type="email" placeholder="tucorreo@ejemplo.com" style="width:100%;background:#0C181B;border:1px solid #243A3F;border-radius:12px;padding:14px 15px;font-size:16px;color:#EAF2F0;outline:none" style-focus="border-color:#2FB4A8">
-            </div>
-            <div>
-              <label style="display:block;font-size:13px;font-weight:700;color:#9FB6B4;margin-bottom:7px">Mensaje <span style="color:#566F6D;font-weight:500">(opcional)</span></label>
-              <textarea value="{{ fMsg }}" onInput="{{ onMsg }}" rows="3" placeholder="Cuéntanos sobre tu consulta o centro" style="width:100%;background:#0C181B;border:1px solid #243A3F;border-radius:12px;padding:14px 15px;font-size:16px;color:#EAF2F0;outline:none;resize:vertical" style-focus="border-color:#2FB4A8"></textarea>
-            </div>
-            <button type="submit" class="rm-btn" style="margin-top:4px;height:54px;border:none;border-radius:13px;background:linear-gradient(135deg,#2FB4A8,#46CB8E);color:#06231F;font-size:17px;font-weight:800">Agendar demo</button>
-            <div style="font-size:13px;color:#566F6D;text-align:center">Te respondemos en menos de 24 h hábiles.</div>
-          </form>
-        </sc-if>
-        <sc-if value="{{ sent }}" hint-placeholder-val="{{ false }}">
-          <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:30px 10px">
-            <div style="width:74px;height:74px;border-radius:50%;background:#16A06B;display:flex;align-items:center;justify-content:center;font-size:36px;color:#fff;box-shadow:0 12px 30px rgba(22,160,107,.34)">✓</div>
-            <div style="font-size:24px;font-weight:800;margin:20px 0 8px">¡Gracias!</div>
-            <p style="font-size:16.5px;color:#9FB6B4;line-height:1.55;margin:0;max-width:320px">Recibimos tu solicitud. Te escribiremos muy pronto para coordinar tu demo de Rimay.</p>
-          </div>
-        </sc-if>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ SOBRE RIMAY (light) ============ -->
-  <!-- divider contacto → sobre -->
-  <div class="rm-divider"></div>
-
-  <section id="sobre" class="rm-section" style="scroll-margin-top:72px;padding:clamp(48px,7vw,80px) clamp(20px,6vw,110px);background:#EEF4F2;color:#0E2A27">
-    <div style="max-width:1100px;margin:0 auto">
-      <div data-reveal data-reveal-type="left" style="font-size:14px;letter-spacing:2.2px;text-transform:uppercase;color:#0C6E6A;font-weight:700">Sobre Rimay</div>
-      <h2 data-reveal data-reveal="40" data-reveal-type="blur" style="font-family:'Atkinson Hyperlegible',sans-serif;font-size:clamp(30px,5vw,52px);line-height:1.1;margin:16px 0 0;font-weight:700;letter-spacing:-1.2px;max-width:900px;color:#0C3D3A">Calma y confianza clínica, hecho en Cuenca.</h2>
-      <p data-reveal data-reveal="80" style="font-size:clamp(17px,2vw,21px);line-height:1.6;color:#395753;margin:24px 0 0;max-width:820px">Rimay — <em>“hablar”, en kichwa</em> — nació en Cuenca, Ecuador, para que la terapia del habla no se detenga al salir del consultorio. Un sistema, dos miradas: simplicidad extrema para quien practica, densidad de datos ordenada para su terapeuta.</p>
-
-      <div style="display:flex;gap:18px;margin-top:36px;flex-wrap:wrap">
-        <div data-reveal data-reveal-type="rotate-left" class="rm-card-light" style="flex:1 1 200px;background:#fff;border:1px solid #D6E3E0;border-radius:18px;padding:26px"><div style="font-size:19px;font-weight:800;color:#16A06B;margin-bottom:8px">Cálida</div><div style="font-size:15.5px;color:#395753;line-height:1.5">Humana y cercana. Hablamos con aliento, no con diagnósticos.</div></div>
-        <div data-reveal data-reveal="80" data-reveal-type="scale" class="rm-card-light" style="flex:1 1 200px;background:#fff;border:1px solid #D6E3E0;border-radius:18px;padding:26px"><div style="font-size:19px;font-weight:800;color:#0C6E6A;margin-bottom:8px">Clínica</div><div style="font-size:15.5px;color:#395753;line-height:1.5">Ordenada y trazable. Registramos tu práctica respecto a tu propio punto de partida, sesión a sesión.</div></div>
-        <div data-reveal data-reveal="160" data-reveal-type="scale" class="rm-card-light" style="flex:1 1 200px;background:#fff;border:1px solid #D6E3E0;border-radius:18px;padding:26px"><div style="font-size:19px;font-weight:800;color:#0E2A27;margin-bottom:8px">Clara</div><div style="font-size:15.5px;color:#395753;line-height:1.5">Legible y directa. Texto grande, una idea por pantalla, sin ruido.</div></div>
-        <div data-reveal data-reveal="240" data-reveal-type="rotate-right" class="rm-card-light" style="flex:1 1 200px;background:#fff;border:1px solid #D6E3E0;border-radius:18px;padding:26px"><div style="font-size:19px;font-weight:800;color:#0C6E6A;margin-bottom:8px">Serena</div><div style="font-size:15.5px;color:#395753;line-height:1.5">Sin alarmas. Movimiento suave que acompaña, nunca distrae.</div></div>
-      </div>
-
-      <div data-reveal data-reveal-type="scale" style="margin-top:30px;background:#0C3D3A;border-radius:18px;padding:26px 30px;display:flex;align-items:center;gap:18px;flex-wrap:wrap">
-        <svg width="40" height="40" viewBox="0 0 100 100" style="flex:none"><circle cx="50" cy="50" r="36" fill="none" stroke="#1C5450" stroke-width="9"/><circle cx="50" cy="50" r="36" fill="none" stroke="#46CB8E" stroke-width="9" stroke-linecap="round" stroke-dasharray="226" stroke-dashoffset="58" transform="rotate(-90 50 50)"/><path d="M35 51 Q50 67 65 51" fill="none" stroke="#EAF2F0" stroke-width="6" stroke-linecap="round"/></svg>
-        <div style="flex:1;min-width:240px"><div style="font-size:17px;font-weight:800;color:#EAF2F0">Accesibilidad por encima de WCAG AA</div><div style="font-size:15px;color:#A9C7C3;margin-top:3px;line-height:1.5">Texto grande, nunca solo color, objetivos táctiles amplios y respeto por el movimiento reducido.</div></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ FOOTER ============ -->
-  <footer style="padding:clamp(40px,5vw,60px) clamp(20px,6vw,110px) 32px;border-top:1px solid #16252A;background:#0A1214">
-    <div style="max-width:1180px;margin:0 auto;display:flex;gap:40px;flex-wrap:wrap;justify-content:space-between">
-      <div style="flex:1 1 280px;max-width:360px">
-        <div style="display:flex;align-items:center;gap:11px">
-          <svg width="32" height="32" viewBox="0 0 100 100" style="flex:none"><circle cx="50" cy="50" r="36" fill="none" stroke="#1A3034" stroke-width="9"/><circle cx="50" cy="50" r="36" fill="none" stroke="url(#gFt)" stroke-width="9" stroke-linecap="round" stroke-dasharray="226" stroke-dashoffset="58" transform="rotate(-90 50 50)"/><path d="M35 51 Q50 67 65 51" fill="none" stroke="#EAF2F0" stroke-width="6" stroke-linecap="round"/><defs><linearGradient id="gFt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2FB4A8"/><stop offset="1" stop-color="#46CB8E"/></linearGradient></defs></svg>
-          <span style="font-weight:800;font-size:21px">Rimay</span>
-        </div>
-        <p style="font-size:15px;color:#7E9896;line-height:1.55;margin:16px 0 0;max-width:300px">Terapia del habla guiada por visión. Convertimos la práctica en casa en progreso medible.</p>
-        <div style="display:flex;gap:10px;margin-top:20px">
-          <a href="#" aria-label="Instagram" class="rm-social" style="width:40px;height:40px;border-radius:11px;border:1px solid #243A3F;display:flex;align-items:center;justify-content:center;color:#9FB6B4"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
-          <a href="#" aria-label="TikTok" class="rm-social" style="width:40px;height:40px;border-radius:11px;border:1px solid #243A3F;display:flex;align-items:center;justify-content:center;color:#9FB6B4"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16 4c.4 2.3 1.9 3.9 4 4.2v2.7c-1.5.1-2.9-.4-4-1.2v5.6a5.3 5.3 0 1 1-5.3-5.3c.3 0 .6 0 .9.1v2.8a2.6 2.6 0 1 0 1.8 2.4V4H16Z"/></svg></a>
-          <a href="#" aria-label="LinkedIn" class="rm-social" style="width:40px;height:40px;border-radius:11px;border:1px solid #243A3F;display:flex;align-items:center;justify-content:center;color:#9FB6B4"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 8A1.5 1.5 0 1 1 6.5 5a1.5 1.5 0 0 1 0 3ZM5 10h3v9H5zM10 10h3v1.3c.5-.8 1.6-1.5 3-1.5 2.3 0 3 1.5 3 3.8V19h-3v-4.7c0-1.2-.4-1.9-1.4-1.9s-1.6.7-1.6 1.9V19h-3z"/></svg></a>
-        </div>
-      </div>
-      <div style="display:flex;gap:54px;flex-wrap:wrap">
-        <div class="rm-fcol" style="display:flex;flex-direction:column;gap:13px">
-          <div style="font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:#566F6D;font-weight:700;margin-bottom:3px">Producto</div>
-          <a href="#como" style="font-size:15px;color:#9FB6B4">Cómo funciona</a>
-          <a href="#privacidad" style="font-size:15px;color:#9FB6B4">Privacidad</a>
-          <a href="#planes" style="font-size:15px;color:#9FB6B4">Planes</a>
-          <a href="#contacto" style="font-size:15px;color:#9FB6B4">Prueba gratis</a>
-        </div>
-        <div class="rm-fcol" style="display:flex;flex-direction:column;gap:13px">
-          <div style="font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:#566F6D;font-weight:700;margin-bottom:3px">Rimay</div>
-          <a href="#sobre" style="font-size:15px;color:#9FB6B4">Sobre Rimay</a>
-          <a href="#contacto" style="font-size:15px;color:#9FB6B4">Contacto</a>
-          <a href="https://w.app/rimay" target="_blank" rel="noopener" style="font-size:15px;color:#9FB6B4">WhatsApp</a>
-        </div>
-      </div>
-    </div>
-    <div id="aviso" style="scroll-margin-top:84px;max-width:1180px;margin:36px auto 0;padding:16px 18px;background:#0C181B;border:1px solid #16252A;border-radius:14px;display:flex;align-items:flex-start;gap:12px">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7E9896" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
-      <span style="font-size:13.5px;color:#7E9896;line-height:1.55">Rimay es una herramienta de apoyo a la terapia del habla; no sustituye la valoración ni el tratamiento de un profesional de salud.</span>
-    </div>
-    <div style="max-width:1180px;margin:24px auto 0;padding-top:24px;border-top:1px solid #16252A;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13.5px;color:#566F6D">
-      <span>© 2026 Rimay · Cuenca, Azuay · Ecuador</span>
-      <span class="rm-fcol" style="display:flex;gap:20px"><a href="#privacidad" style="color:#566F6D">Privacidad</a><a href="#aviso" style="color:#566F6D">Términos</a></span>
-    </div>
-  </footer>
-
+<!-- loader -->
+<div class="loader" id="loader">
+  <div class="loader-word" aria-hidden="true"><span>R</span><span>i</span><span>m</span><span><em>a</em></span><span>y</span></div>
+  <div class="loader-bar"><i id="loader-fill"></i></div>
+  <div class="loader-tag mono">Terapia del habla · Cuenca, EC</div>
 </div>
-</x-dc>
-<script type="text/x-dc" data-dc-script>
-class Component extends DCLogic {
-  state = { menuOpen: false, name: '', email: '', role: '', msg: '', sent: false };
 
-  componentDidMount() {
-    console.log('Rimay Web: componentDidMount init');
-    this._cancels = [];
-    // Force reduce=false so animations run regardless of Windows OS settings (which often disable them)
-    const reduce = false;
-    this._reduce = reduce;
+<div class="grain" aria-hidden="true"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="cur-dot" aria-hidden="true"></div>
+<div class="cur-ring" aria-hidden="true"></div>
+<div class="progress" aria-hidden="true"><i id="progress-fill"></i></div>
 
-    const playVideos = () => document.querySelectorAll('video[data-bgvideo]').forEach(v => {
-      try {
-        v.muted = true; v.loop = true;
-        if (v.ended || v.currentTime >= (v.duration || 1e9) - 0.05) { try { v.currentTime = 0; } catch (e) {} }
-        const p = v.play(); if (p && p.catch) p.catch(() => {});
-      } catch (e) {}
-    });
-    document.querySelectorAll('video[data-bgvideo]').forEach(v => {
-      v.addEventListener('ended', () => { try { v.currentTime = 0; v.play().catch(() => {}); } catch (e) {} });
-    });
-    playVideos();
-    setTimeout(playVideos, 250);
-    setTimeout(playVideos, 1200);
-    this._onVis = () => { if (!document.hidden) playVideos(); };
-    document.addEventListener('visibilitychange', this._onVis);
-    window.addEventListener('focus', this._onVis);
-    this._playInt = setInterval(() => { if (!document.hidden) playVideos(); }, 4000);
-    this._cancels.push(() => { clearInterval(this._playInt); document.removeEventListener('visibilitychange', this._onVis); window.removeEventListener('focus', this._onVis); });
+<!-- header -->
+<header class="hdr" id="hdr">
+  <a href="#top" class="brand" data-hover>
+    <svg width="34" height="34" viewBox="0 0 100 100"><circle cx="50" cy="50" r="36" fill="none" stroke="#16292C" stroke-width="9"/><circle cx="50" cy="50" r="36" fill="none" stroke="url(#gHd)" stroke-width="9" stroke-linecap="round" stroke-dasharray="226" stroke-dashoffset="58" transform="rotate(-90 50 50)"/><path d="M35 51 Q50 67 65 51" fill="none" stroke="#EDF6F3" stroke-width="6" stroke-linecap="round"/><defs><linearGradient id="gHd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2FB4A8"/><stop offset="1" stop-color="#46CB8E"/></linearGradient></defs></svg>
+    <b>Rimay</b>
+    <span class="mono">Terapia del habla</span>
+  </a>
+  <nav class="nav-pill">
+    <a href="#como" data-hover>Cómo funciona</a>
+    <a href="#privacidad" data-hover>Privacidad</a>
+    <a href="#panel" data-hover>Panel</a>
+    <a href="#planes" data-hover>Planes</a>
+    <a href="#sobre" data-hover>Sobre Rimay</a>
+  </nav>
+  <a href="#contacto" class="btn btn-primary btn-sm magnetic hdr-cta" data-hover><span class="bl">Prueba gratis</span></a>
+  <button class="burger" id="burger" aria-label="Menú"><i></i></button>
+</header>
 
-    /* ---- scroll progress bar ---- */
-    const progressBar = document.querySelector('[data-progress]');
-    /* ---- parallax orbs ---- */
-    const orbs = [].slice.call(document.querySelectorAll('[data-parallax]'));
+<!-- mobile menu -->
+<div class="mmenu" id="mmenu">
+  <a class="mm-link" href="#como"><span class="mono">01</span>Cómo funciona</a>
+  <a class="mm-link" href="#privacidad"><span class="mono">02</span>Privacidad</a>
+  <a class="mm-link" href="#panel"><span class="mono">03</span>Panel</a>
+  <a class="mm-link" href="#planes"><span class="mono">04</span>Planes</a>
+  <a class="mm-link" href="#sobre"><span class="mono">05</span>Sobre Rimay</a>
+  <a class="mm-cta btn btn-primary" href="#contacto"><span class="bl">Prueba gratis</span></a>
+</div>
 
-    const header = document.querySelector('[data-header]');
-    this._onScroll = () => {
-      /* header glass */
-      if (header) {
-        const on = window.scrollY > 40;
-        header.style.background = on ? 'rgba(11,20,22,.82)' : 'rgba(11,20,22,0)';
-        header.style.borderBottomColor = on ? 'rgba(255,255,255,.08)' : 'transparent';
-        header.style.backdropFilter = on ? 'blur(14px)' : 'none';
-        header.style.webkitBackdropFilter = on ? 'blur(14px)' : 'none';
-      }
-      /* scroll progress */
-      if (progressBar) {
-        const docH = document.documentElement.scrollHeight - window.innerHeight;
-        const pct = docH > 0 ? Math.min(window.scrollY / docH, 1) : 0;
-        progressBar.style.transform = 'scaleX(' + pct + ')';
-      }
-      /* parallax orbs */
-      if (!reduce) {
-        const sy = window.scrollY;
-        orbs.forEach(o => {
-          const speed = parseFloat(o.dataset.parallax) || 0.02;
-          o.style.transform = 'translateY(' + (sy * speed * -60) + 'px)';
-        });
-      }
-    };
-    window.addEventListener('scroll', this._onScroll, { passive: true });
-    this._onScroll();
+<main>
 
-    /* ---- orb visibility on section enter ---- */
-    if (!reduce) {
-      const orbIO = new IntersectionObserver((ents) => {
-        ents.forEach(en => {
-          en.target.classList.toggle('rm-visible', en.isIntersecting);
-        });
-      }, { threshold: 0.05 });
-      document.querySelectorAll('.rm-orb:not(.rm-visible)').forEach(o => orbIO.observe(o));
-      this._cancels.push(() => orbIO.disconnect());
-    }
+<!-- ============ HERO ============ -->
+<section class="hero" id="top">
+  <canvas id="aurora"></canvas>
+  <div class="hero-veil"></div>
+  <div class="hero-grid container">
+    <div class="hero-copy">
+      <div class="kicker mono" data-reveal><span class="dotp"></span>Apoyo a la terapia del habla · Post-ACV</div>
+      <h1 class="h1" id="h1">
+        <span class="h1-line" data-split-chars>Cada repetición</span>
+        <span class="h1-line" data-split-chars><em class="serif">cuenta.</em></span>
+        <span class="h1-line" data-split-chars>Y tu terapeuta lo <span class="grad-text">ve</span>.</span>
+      </h1>
+      <p class="hero-sub" data-reveal data-delay="0.15">Rimay te acompaña en cada repetición y mide tu avance respecto a tu propio punto de partida — para que tu fonoaudiólogo siga de cerca tu constancia, sin reemplazar nunca su criterio.</p>
+      <div class="hero-cta" data-reveal data-delay="0.25">
+        <a href="#contacto" class="btn btn-primary magnetic" data-hover><span class="bl">Prueba gratis
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></a>
+        <a href="#como" class="btn btn-ghost magnetic" data-hover><span class="bl">Ver cómo funciona</span></a>
+      </div>
+      <ul class="hero-chips" data-reveal data-delay="0.35">
+        <li>Sin hardware</li>
+        <li>Privacidad por diseño</li>
+        <li>WCAG AA+</li>
+      </ul>
+    </div>
 
-    /* ---- reveal animations ---- */
-    const els = [].slice.call(document.querySelectorAll('[data-reveal]'));
-    if (reduce) {
-      els.forEach(e => { e.style.opacity = '1'; e.style.transform = 'none'; e.style.filter = 'none'; if (e.dataset.count) e.textContent = (e.dataset.prefix || '') + e.dataset.count; });
-    } else {
-      const io = new IntersectionObserver((ents) => {
-        ents.forEach(en => {
-          if (en.isIntersecting) {
-            const e = en.target;
-            e.style.transitionDelay = (parseFloat(e.dataset.reveal) || 0) + 'ms';
-            e.style.opacity = '1';
-            e.style.transform = 'none';
-            e.style.filter = 'none';
-            if (e.dataset.count) this.countUp(e);
-            io.unobserve(e);
-          }
-        });
-      }, { threshold: 0.1, rootMargin: '0px 0px -8% 0px' });
-      els.forEach(e => io.observe(e));
-      this._cancels.push(() => io.disconnect());
-      /* safety: only reveal after a very long time as ultimate fallback */
-      this._safety = setTimeout(() => els.forEach(e => { e.style.opacity = '1'; e.style.transform = 'none'; e.style.filter = 'none'; }), 20000);
-    }
+    <figure class="hero-media" id="hero-media">
+      <div class="frame">
+        <video data-bgvideo autoplay muted loop playsinline preload="auto"><source src="uploads/video1.mp4" type="video/mp4"></video>
+        <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+        <div class="hud-pill hero-hud-1"><span class="rec"></span>Sesión en vivo</div>
+        <div class="hud-pill hero-hud-2">Cam + Mic · Local</div>
+      </div>
+      <div class="hero-datacard">
+        <div><div class="dnum grad-text" data-count="24">0</div><div class="dlab">Repeticiones<br>válidas hoy</div></div>
+        <div class="dsep"></div>
+        <div><div class="dnum" data-count="85" data-suffix="%">0%</div><div class="dlab">Simetría<br>facial</div></div>
+        <div class="dsep"></div>
+        <div><div class="dnum" data-count="12">0</div><div class="dlab">Días<br>seguidos</div></div>
+      </div>
+    </figure>
+  </div>
+  <a href="#problema" class="scroll-cue" data-hover><span class="mono">Scroll</span><span class="line"></span></a>
+</section>
 
-    /* ---- 3D card tilt on mousemove ---- */
-    if (!reduce) {
-      this._tiltCards = [].slice.call(document.querySelectorAll('.rm-tilt'));
-      this._tiltHandlers = [];
-      this._tiltCards.forEach(card => {
-        const onMove = (ev) => {
-          const r = card.getBoundingClientRect();
-          const x = (ev.clientX - r.left) / r.width - 0.5;
-          const y = (ev.clientY - r.top) / r.height - 0.5;
-          card.style.transform = 'perspective(800px) rotateY(' + (x * 8) + 'deg) rotateX(' + (-y * 8) + 'deg) translateY(-4px)';
-          card.style.boxShadow = '0 ' + (24 + y * 10) + 'px 48px -24px rgba(47,180,168,' + (0.3 + Math.abs(x) * 0.2) + ')';
-        };
-        const onLeave = () => {
-          card.style.transform = '';
-          card.style.boxShadow = '';
-        };
-        card.addEventListener('mousemove', onMove);
-        card.addEventListener('mouseleave', onLeave);
-        this._tiltHandlers.push({ card, onMove, onLeave });
-      });
-    }
+<!-- ============ MARQUEE ============ -->
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <span><em>Biofeedback bimodal</em><i>✦</i>Compuerta AND<i>✦</i>Privacidad por diseño<i>✦</i><em>Hecho en Cuenca</em><i>✦</i>Sin hardware<i>✦</i>Telemetría clínica<i>✦</i></span>
+    <span><em>Biofeedback bimodal</em><i>✦</i>Compuerta AND<i>✦</i>Privacidad por diseño<i>✦</i><em>Hecho en Cuenca</em><i>✦</i>Sin hardware<i>✦</i>Telemetría clínica<i>✦</i></span>
+  </div>
+</div>
 
-    /* ---- simulation logic for video4 ---- */
-    const simVid = document.getElementById('sim-video');
-    const sMov = document.getElementById('sim-mov');
-    const sVoz = document.getElementById('sim-voz');
-    const sPct = document.getElementById('sim-pct');
-    const sCirc = document.getElementById('sim-circle');
-    const sArr = document.getElementById('sim-arrow');
-    const sVal = document.getElementById('sim-valid');
-    const sCard = document.getElementById('sim-card');
-    const sFps = document.getElementById('sim-fps');
+<!-- ============ PROBLEMA ============ -->
+<section id="problema" class="sec-pad">
+  <span class="ghost-num" data-parallax="0.25" aria-hidden="true">01</span>
+  <div class="container" style="position:relative;z-index:2">
+    <div class="sec-tag mono"><span class="idx">01</span>El reto</div>
+    <h2 class="h2" data-split>La terapia del habla se gana <em class="serif">en casa</em>, entre sesiones.</h2>
+    <p class="lead" data-reveal>Tras un ACV, el avance depende de la práctica facial diaria. Pero al salir del consultorio, el paciente queda sin guía y el terapeuta, sin datos.</p>
 
-    if (simVid && !reduce) {
-      let lastVal = false;
-      simVid.addEventListener('timeupdate', () => {
-        const t = simVid.currentTime;
-        /* Simular movimiento basado en el tiempo para que parezca real */
-        const rawMov = Math.sin(t * 1.8) * 45 + 40 + Math.random() * 15; 
-        const mov = Math.max(0, Math.min(100, rawMov));
-        
-        /* Simular voz (picos en ciertos momentos) */
-        const isVoz = (Math.sin(t * 2.5) > 0.6) || (Math.cos(t * 1.5) > 0.8);
-        
-        let pct = Math.round(mov);
-        if (pct < 20) pct = 0;
-        
-        const hasMov = pct > 45;
-        const valid = hasMov && isVoz;
-        
-        /* Update Movimiento check */
-        sMov.style.background = hasMov ? '#11302E' : 'rgba(255,255,255,0.03)';
-        sMov.style.color = hasMov ? '#46CB8E' : '#566F6D';
-        sMov.style.borderColor = hasMov ? '#1F4A40' : 'rgba(255,255,255,0.08)';
-        sMov.querySelector('span').style.background = hasMov ? '#16A06B' : 'rgba(255,255,255,0.1)';
-        sMov.querySelector('span').style.color = hasMov ? '#fff' : 'transparent';
-        
-        /* Update Voz check */
-        sVoz.style.background = isVoz ? '#11302E' : 'rgba(255,255,255,0.03)';
-        sVoz.style.color = isVoz ? '#46CB8E' : '#566F6D';
-        sVoz.style.borderColor = isVoz ? '#1F4A40' : 'rgba(255,255,255,0.08)';
-        sVoz.querySelector('span').style.background = isVoz ? '#16A06B' : 'rgba(255,255,255,0.1)';
-        sVoz.querySelector('span').style.color = isVoz ? '#fff' : 'transparent';
+    <div class="rows">
+      <article class="row-item" data-reveal>
+        <span class="ri-idx">/ 01</span>
+        <h3>Adherencia frágil</h3>
+        <p>Los ejercicios se abandonan entre citas. Sin acompañamiento ni recordatorios, la constancia se pierde.</p>
+        <span class="ri-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#E2A23E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h3l2-5 4 14 3-9 2 4h4"/></svg></span>
+      </article>
+      <article class="row-item" data-reveal data-delay="0.08">
+        <span class="ri-idx">/ 02</span>
+        <h3>Progreso a ciegas</h3>
+        <p>El avance se juzga de oído, sin registro. Sin un punto de partida claro, cuesta ver la constancia y ajustar la práctica.</p>
+        <span class="ri-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2FB4A8" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.4"/><circle cx="12" cy="12" r="0.7" fill="#2FB4A8"/></svg></span>
+      </article>
+      <article class="row-item" data-reveal data-delay="0.16">
+        <span class="ri-idx">/ 03</span>
+        <h3>Distancia y acceso</h3>
+        <p>En Cuenca y Ecuador, llegar a terapia cuesta tiempo y dinero. Una herramienta que mida y acompañe en casa llena ese vacío.</p>
+        <span class="ri-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#46CB8E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5-7-11a7 7 0 0 1 14 0c0 6-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg></span>
+      </article>
+    </div>
+  </div>
+</section>
 
-        /* Update Percentage and Circle */
-        sPct.textContent = pct + '%';
-        const offset = 132 - (132 * pct / 100);
-        sCirc.style.strokeDashoffset = offset;
-        sCirc.style.stroke = valid ? '#46CB8E' : (hasMov ? '#E2A23E' : '#2FB4A8');
+<!-- ============ CÓMO FUNCIONA ============ -->
+<section id="como" class="sec-pad sec-como">
+  <span class="ghost-num" data-parallax="0.2" aria-hidden="true">02</span>
+  <div class="container" style="position:relative;z-index:2">
+    <div class="sec-tag mono"><span class="idx">02</span>Cómo funciona</div>
+    <h2 class="h2" data-split>Biofeedback bimodal. Solo cuenta <em class="serif">lo real</em>.</h2>
+    <p class="lead" data-reveal>La cámara mide el movimiento facial. El micrófono confirma la voz. La <strong>compuerta AND</strong> une las dos señales: una repetición vale solo si ocurren a la vez — nunca la mímica muda.</p>
 
-        /* Update Valid State */
-        if (valid && !lastVal) {
-          sCard.style.borderColor = 'rgba(70,203,142,0.4)';
-          sCard.style.background = 'rgba(11,32,27,0.78)';
-          sArr.style.opacity = '1';
-          sVal.style.opacity = '1';
-        } else if (!valid && lastVal) {
-          sCard.style.borderColor = '#24393E';
-          sCard.style.background = 'rgba(10,21,23,0.78)';
-          sArr.style.opacity = '0.3';
-          sVal.style.opacity = '0';
-        }
-        lastVal = valid;
-        
-        /* Fake fluctuating inference time */
-        sFps.textContent = (Math.random() * 0.12 + 0.61).toFixed(2);
-      });
-    }
-  }
+    <div class="sim-wrap">
+      <!-- stage -->
+      <div class="sim-stage" data-reveal>
+        <video id="sim-video" data-bgvideo autoplay muted loop playsinline preload="auto"><source src="uploads/video4.mp4" type="video/mp4"></video>
+        <div class="shade"></div>
+        <div class="scanline"></div>
+        <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+        <div class="sim-hud-top">
+          <div class="hud-pill"><span class="dotp" style="width:7px;height:7px;border-radius:50%;background:#46CB8E"></span>Rostro detectado</div>
+          <div class="hud-pill" style="color:var(--mut);border-color:var(--line)"><span class="rec"></span>En vivo · <span id="sim-ms">0.67</span> ms</div>
+        </div>
+        <div class="sim-caption">
+          <div class="cap-l"><b id="sim-state">Analizando señal…</b>Movimiento + voz simultáneos</div>
+          <div class="sim-ring">
+            <svg width="58" height="58" viewBox="0 0 58 58"><circle cx="29" cy="29" r="23" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="5"/><circle id="sim-circle" cx="29" cy="29" r="23" fill="none" stroke="#46CB8E" stroke-width="5" stroke-linecap="round" stroke-dasharray="144.5" stroke-dashoffset="144.5" style="transition:stroke-dashoffset .18s linear,stroke .3s"/></svg>
+            <span class="pct" id="sim-pct">0%</span>
+          </div>
+        </div>
+      </div>
 
-  componentWillUnmount() {
-    window.removeEventListener('scroll', this._onScroll);
-    clearTimeout(this._safety);
-    (this._cancels || []).forEach(c => c());
-    (this._tiltHandlers || []).forEach(h => {
-      h.card.removeEventListener('mousemove', h.onMove);
-      h.card.removeEventListener('mouseleave', h.onLeave);
-    });
-  }
+      <!-- signal panel -->
+      <div class="sim-side glow-card" data-reveal data-delay="0.1">
+        <div>
+          <div class="sig-label"><b>SEÑAL 01 · MOVIMIENTO</b><span class="sig-val" id="mov-val">0%</span></div>
+          <div class="meter"><i id="mov-bar"></i></div>
+        </div>
+        <div class="sim-div"></div>
+        <div>
+          <div class="sig-label"><b>SEÑAL 02 · VOZ</b><span class="sig-val" id="voz-val">—</span></div>
+          <canvas id="wave"></canvas>
+        </div>
+        <div class="sim-div"></div>
+        <div class="gate">
+          <div class="g-ins">
+            <div class="g-chip" id="g-mov"><i></i>MOV</div>
+            <div class="g-chip" id="g-voz"><i></i>VOZ</div>
+          </div>
+          <div class="g-wire" id="gw-1"></div>
+          <div class="g-and" id="g-and">AND</div>
+          <div class="g-wire" id="gw-2"></div>
+          <div class="g-out" id="g-out">✓</div>
+        </div>
+        <div class="sim-outrow">
+          <div>
+            <div class="lab">Repeticiones válidas</div>
+            <div class="rep-num grad-text" id="rep-count">0</div>
+          </div>
+          <span class="rep-flash" id="rep-flash">Repetición válida</span>
+        </div>
+      </div>
+    </div>
 
-  countUp(e) {
-    const target = parseFloat(e.dataset.count);
-    const pre = e.dataset.prefix || '';
-    if (this._reduce || isNaN(target)) { e.textContent = pre + target; return; }
-    const dur = 1200, t0 = performance.now();
-    const step = (t) => {
-      const k = Math.min(1, (t - t0) / dur);
-      /* spring-like bounce easing */
-      const ease = k < 1 ? 1 - Math.pow(1 - k, 4) : 1;
-      const v = Math.round(target * ease);
-      e.textContent = pre + v;
-      if (k < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }
+    <div class="steps">
+      <div class="step" data-reveal><span class="mono">Paso 01</span><h4>La cámara mide</h4><p>Apertura, simetría y rango del rostro, cuadro a cuadro.</p></div>
+      <div class="step" data-reveal data-delay="0.08"><span class="mono">Paso 02</span><h4>El micrófono confirma</h4><p>Verifica la fonación: que de verdad se está produciendo voz.</p></div>
+      <div class="step" data-reveal data-delay="0.16"><span class="mono">Paso 03</span><h4>La compuerta AND decide</h4><p>Las dos señales a la vez = repetición válida. Tu terapeuta recibe un registro objetivo.</p></div>
+    </div>
+  </div>
+</section>
 
-  toggleMenu = () => this.setState(s => ({ menuOpen: !s.menuOpen }));
-  closeMenu = () => this.setState({ menuOpen: false });
-  field = (k) => (e) => this.setState({ [k]: e.target.value });
-  submit = (e) => {
-    e.preventDefault();
-    const s = this.state;
-    const roles = { fono: 'Fonoaudiólogo/a', clinica: 'Clínica o institución', paciente: 'Paciente o familiar', otro: 'Otro' };
-    const subject = encodeURIComponent('Solicitud de demo Rimay — ' + (s.name || 'Sin nombre'));
-    const body = encodeURIComponent(
-      'Nombre: ' + (s.name || '-') + '\n' +
-      'Perfil: ' + (roles[s.role] || s.role || '-') + '\n' +
-      'Correo: ' + (s.email || '-') + '\n\n' +
-      'Mensaje:\n' + (s.msg || '-')
-    );
-    try { window.location.href = 'mailto:contacto@rimay.dev?subject=' + subject + '&body=' + body; } catch (err) {}
-    this.setState({ sent: true });
-  };
+<!-- ============ PRIVACIDAD ============ -->
+<section id="privacidad" class="sec-pad sec-priv">
+  <span class="ghost-num" data-parallax="0.22" aria-hidden="true">03</span>
+  <div class="container" style="position:relative;z-index:2">
+    <div class="sec-tag mono"><span class="idx">03</span>Privacidad</div>
+    <h2 class="h2" data-split>Tu cara y tu voz <em class="serif">nunca salen</em> de tu dispositivo.</h2>
+    <p class="lead" data-reveal>Privacidad por diseño: <strong>no podemos filtrar lo que nunca recibimos.</strong> El análisis del movimiento y la voz ocurre en tu propio equipo; solo viajan los resultados.</p>
 
-  renderVals() {
-    const s = this.state;
-    return {
-      menuScrimStyle: { opacity: s.menuOpen ? 1 : 0, pointerEvents: s.menuOpen ? 'auto' : 'none' },
-      menuPanelStyle: { transform: s.menuOpen ? 'translateX(0)' : 'translateX(100%)' },
-      toggleMenu: this.toggleMenu, closeMenu: this.closeMenu,
-      fName: s.name, fEmail: s.email, fRole: s.role, fMsg: s.msg,
-      onName: this.field('name'), onEmail: this.field('email'), onRole: this.field('role'), onMsg: this.field('msg'),
-      onSubmit: this.submit, sent: s.sent, notSent: !s.sent,
-    };
+    <div class="airlock" data-reveal>
+      <div class="air-left">
+        <span class="blob b1"></span><span class="blob b2"></span><span class="glass"></span>
+        <div class="air-head">
+          <span class="aico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EDF6F3" stroke-width="1.7" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span>
+          <div><b>Tu dispositivo</b><span class="sub">Cámara y micrófono</span></div>
+        </div>
+        <div class="air-strike">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#E0726B" stroke-width="1.7" style="flex:none"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L22 7v10"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+          Video y audio borrados en tiempo real
+        </div>
+      </div>
+      <div class="air-mid">
+        <span class="air-lock"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#46CB8E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+      </div>
+      <div class="air-right">
+        <div class="air-head">
+          <span class="aico" style="background:rgba(70,203,142,.1);border-color:rgba(70,203,142,.25)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#46CB8E" stroke-width="1.7" stroke-linecap="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></span>
+          <div><b>Terapeuta</b><span class="sub">Recibe resultados matemáticos limpios</span></div>
+        </div>
+        <div class="air-stats">
+          <div class="air-stat"><b data-count="24">0</b><span>Repeticiones válidas</span></div>
+          <div class="air-stat"><b data-count="85" data-suffix="%">0%</b><span>Simetría facial</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="priv-notes">
+      <div class="priv-note" data-reveal>
+        <span class="pico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#2FB4A8" stroke-width="1.7" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></svg></span>
+        <h4>Procesado en tu equipo</h4><p>El movimiento y la voz se analizan localmente en tu propio teléfono o computador, no en la nube.</p>
+      </div>
+      <div class="priv-note" data-reveal data-delay="0.08">
+        <span class="pico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#2FB4A8" stroke-width="1.7" stroke-linecap="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 20h14"/></svg></span>
+        <h4>Solo viajan resultados</h4><p>Se envían cifras matemáticas, como repeticiones y ángulos de simetría. Nunca tu video ni tu audio.</p>
+      </div>
+      <div class="priv-note" data-reveal data-delay="0.16">
+        <span class="pico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#46CB8E" stroke-width="1.7" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg></span>
+        <h4>Tú decides quién lo ve</h4><p>Tú y tu terapeuta deciden quién puede auditar tu progreso clínico. Absolutamente nadie más.</p>
+      </div>
+    </div>
+
+    <div class="priv-quote" data-reveal>
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#46CB8E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+      <p><strong>La privacidad es parte del cuidado, no un extra técnico.</strong> Proteger los datos de alguien que se está recuperando es tratarlo con respeto — a él y a su familia.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PANEL DEL TERAPEUTA (horizontal) ============ -->
+<section id="panel" class="sec-panel">
+  <div class="panel-pin sec-pad-inner" id="panel-pin">
+    <div class="panel-head">
+      <div>
+        <div class="sec-tag mono"><span class="idx">04</span>El panel del terapeuta</div>
+        <h2 class="h2" data-split>Telemetría pura, renderizada en un <em class="serif">gemelo digital</em>.</h2>
+      </div>
+      <p class="lead" style="margin-top:0;max-width:38ch" data-reveal>El terapeuta no necesita invadir el hogar del paciente con video. Rimay reconstruye la sesión desde la matriz de datos, sobre un modelo anatómico.</p>
+    </div>
+    <div class="panel-track" id="panel-track">
+      <article class="pcard glow-card">
+        <span class="mono">04.1 — Fatiga</span>
+        <h3>Mapas de calor</h3>
+        <p>Visualiza la fatiga y el esfuerzo orofacial en zonas específicas, sesión a sesión.</p>
+      </article>
+      <article class="pcard glow-card">
+        <span class="mono">04.2 — Asimetría</span>
+        <h3>Análisis de asimetría</h3>
+        <p>Detecta milimétricamente la diferencia de rango de movimiento entre el lado izquierdo y derecho post-ACV.</p>
+      </article>
+      <article class="pcard glow-card">
+        <span class="mono">04.3 — Evolución</span>
+        <h3>Historial biomecánico</h3>
+        <p>Reproduce sesiones pasadas desde cualquier ángulo para auditar la evolución de la disartria.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PLANES ============ -->
+<section id="planes" class="sec-pad">
+  <span class="ghost-num" data-parallax="0.22" aria-hidden="true">05</span>
+  <div class="container" style="position:relative;z-index:2">
+    <div class="sec-tag mono"><span class="idx">05</span>Planes</div>
+    <h2 class="h2" data-split>Empieza gratis. Crece <em class="serif">cuando lo necesites</em>.</h2>
+    <p class="lead" data-reveal>Suscripción mensual en USD. Todo corre en el navegador, sin aparatos: sumar un paciente más casi no cuesta.</p>
+
+    <div class="plans">
+      <div class="plan" data-reveal>
+        <span class="pname">Free</span>
+        <div class="price"><b data-count="0" data-prefix="$">$0</b></div>
+        <div class="pfor">Para empezar</div>
+        <ul><li>1-2 pacientes activos</li><li>Ejercicios guiados</li><li>Biofeedback básico</li></ul>
+        <a href="#contacto" class="btn btn-ghost btn-block" data-hover><span class="bl">Prueba gratis</span></a>
+      </div>
+      <div class="plan plan-pro" data-reveal data-delay="0.08">
+        <span class="plan-badge">Más popular</span>
+        <span class="pname">Pro</span>
+        <div class="price"><b data-count="29" data-prefix="$">$29</b><span>/ mes</span></div>
+        <div class="pfor">Por terapeuta</div>
+        <ul><li>Panel clínico completo</li><li>Planes versionados</li><li>Hasta 20 pacientes</li><li>Reportes objetivos</li></ul>
+        <a href="#contacto" class="btn btn-primary btn-block" data-hover><span class="bl">Elegir Pro</span></a>
+      </div>
+      <div class="plan" data-reveal data-delay="0.16">
+        <span class="pname" style="color:var(--green)">Premium</span>
+        <div class="price"><b data-count="59" data-prefix="$">$59</b><span>/ mes</span></div>
+        <div class="pfor">Por terapeuta</div>
+        <ul><li>Todo lo de Pro</li><li>Gemelo digital 3D</li><li>Analítica de asimetría y fatiga</li></ul>
+        <a href="#contacto" class="btn btn-ghost btn-block" data-hover><span class="bl">Elegir Premium</span></a>
+      </div>
+      <div class="plan" data-reveal data-delay="0.24">
+        <span class="pname">Clínica</span>
+        <div class="price"><b data-count="149" data-prefix="$">$149</b><span>/ mes</span></div>
+        <div class="pfor">Por institución</div>
+        <ul><li>Multi-terapeuta</li><li>Tablero institucional</li><li>Licencias IESS / universidades</li><li>Soporte dedicado</li></ul>
+        <a href="#contacto" class="btn btn-ghost btn-block" data-hover><span class="bl">Hablar con ventas</span></a>
+      </div>
+    </div>
+    <p class="plans-note" data-reveal>¿Eres paciente o familiar? Rimay se usa junto a tu fonoaudiólogo — escríbenos y te conectamos con uno.</p>
+  </div>
+</section>
+
+<!-- ============ SOBRE (light) ============ -->
+<section id="sobre" class="sec-pad sec-sobre">
+  <div class="container">
+    <div class="sec-tag mono"><span class="idx">06</span>Sobre Rimay</div>
+    <h2 class="h2" data-split>Calma y confianza clínica, <em class="serif">hecho en Cuenca</em>.</h2>
+    <p class="lead" data-reveal>Rimay — <em class="serif" style="font-size:1.1em">“hablar”, en kichwa</em> — nació en Cuenca, Ecuador, para que la terapia del habla no se detenga al salir del consultorio. Un sistema, dos miradas: simplicidad extrema para quien practica, densidad de datos ordenada para su terapeuta.</p>
+
+    <div class="sobre-vals">
+      <div class="sval" data-reveal><b>Cálida</b><p>Humana y cercana. Hablamos con aliento, no con diagnósticos.</p></div>
+      <div class="sval" data-reveal data-delay="0.07"><b class="alt">Clínica</b><p>Ordenada y trazable. Registramos tu práctica respecto a tu propio punto de partida, sesión a sesión.</p></div>
+      <div class="sval" data-reveal data-delay="0.14"><b>Clara</b><p>Legible y directa. Texto grande, una idea por pantalla, sin ruido.</p></div>
+      <div class="sval" data-reveal data-delay="0.21"><b class="alt">Serena</b><p>Sin alarmas. Movimiento suave que acompaña, nunca distrae.</p></div>
+    </div>
+
+    <div class="sobre-a11y" data-reveal>
+      <svg width="40" height="40" viewBox="0 0 100 100" style="flex:none"><circle cx="50" cy="50" r="36" fill="none" stroke="#1C5450" stroke-width="9"/><circle cx="50" cy="50" r="36" fill="none" stroke="#46CB8E" stroke-width="9" stroke-linecap="round" stroke-dasharray="226" stroke-dashoffset="58" transform="rotate(-90 50 50)"/><path d="M35 51 Q50 67 65 51" fill="none" stroke="#EAF3EF" stroke-width="6" stroke-linecap="round"/></svg>
+      <div style="flex:1;min-width:240px"><b>Accesibilidad por encima de WCAG AA</b><span>Texto grande, nunca solo color, objetivos táctiles amplios y respeto por el movimiento reducido.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTACTO ============ -->
+<section id="contacto" class="sec-pad sec-contact">
+  <span class="ghost-num" data-parallax="0.22" aria-hidden="true">07</span>
+  <div class="container" style="position:relative;z-index:2">
+    <div class="sec-tag mono"><span class="idx">07</span>Contacto</div>
+    <h2 class="h2" data-split>Agenda una demo o empieza <em class="serif">gratis</em>.</h2>
+
+    <div class="contact-grid">
+      <div>
+        <p class="lead" style="margin-top:0" data-reveal>Te mostramos cómo dar de alta a tu primer paciente y leer su primer reporte. Sin tarjeta.</p>
+        <div class="clinks" style="margin-top:34px">
+          <a href="https://w.app/rimay" target="_blank" rel="noopener" class="clink" data-reveal data-hover>
+            <span class="cico"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#46CB8E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a7.5 7.5 0 0 1-11 6.6L4.5 19.5l1.4-4.4A7.5 7.5 0 1 1 20 11.5Z"/><path d="M9 9.5c.5 2.5 2.5 4.5 5 5l1.3-1.3 1.7.8M9 9.5l-.8-1.7L9.5 6.5"/></svg></span>
+            <span><b>WhatsApp</b><span>Respuesta rápida · Lun a Vie</span></span>
+            <span class="arr">→</span>
+          </a>
+          <a href="mailto:contacto@rimay.dev" class="clink" data-reveal data-delay="0.08" data-hover>
+            <span class="cico"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#46CB8E" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+            <span><b>contacto@rimay.dev</b><span>Escríbenos cuando quieras</span></span>
+            <span class="arr">→</span>
+          </a>
+          <div class="cloc" data-reveal data-delay="0.14">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5E7775" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5-7-11a7 7 0 0 1 14 0c0 6-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>
+            Cuenca · Azuay · Ecuador
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card glow-card" data-reveal data-delay="0.1">
+        <form id="demo-form" novalidate>
+          <div class="form-head"><b>Agenda tu demo</b><span class="mono" style="color:var(--teal)">/ 24h</span></div>
+          <div class="fld">
+            <label for="f-name">Nombre</label>
+            <input id="f-name" name="name" placeholder="Tu nombre">
+          </div>
+          <div class="fld">
+            <label for="f-role">¿Quién eres?</label>
+            <select id="f-role" name="role">
+              <option value="">Selecciona una opción</option>
+              <option value="fono">Fonoaudiólogo/a</option>
+              <option value="clinica">Clínica o institución</option>
+              <option value="paciente">Paciente o familiar</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="fld">
+            <label for="f-email">Correo</label>
+            <input id="f-email" name="email" type="email" placeholder="tucorreo@ejemplo.com">
+          </div>
+          <div class="fld">
+            <label for="f-msg">Mensaje <span style="opacity:.5;text-transform:none;letter-spacing:0">(opcional)</span></label>
+            <textarea id="f-msg" name="msg" rows="3" placeholder="Cuéntanos sobre tu consulta o centro"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block magnetic" data-hover><span class="bl">Agendar demo
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></button>
+          <div class="form-foot">Te respondemos en menos de 24 h hábiles.</div>
+        </form>
+        <div class="form-ok" id="form-ok">
+          <span class="ok-badge"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <b>¡Gracias!</b>
+          <p>Recibimos tu solicitud. Te escribiremos muy pronto para coordinar tu demo de Rimay.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="foot-word" aria-hidden="true">
+    <span>RIMAY</span>
+    <span class="fill" id="foot-fill">RIMAY</span>
+  </div>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a href="#top" class="brand" data-hover>
+          <svg width="30" height="30" viewBox="0 0 100 100"><circle cx="50" cy="50" r="36" fill="none" stroke="#16292C" stroke-width="9"/><circle cx="50" cy="50" r="36" fill="none" stroke="url(#gFt)" stroke-width="9" stroke-linecap="round" stroke-dasharray="226" stroke-dashoffset="58" transform="rotate(-90 50 50)"/><path d="M35 51 Q50 67 65 51" fill="none" stroke="#EDF6F3" stroke-width="6" stroke-linecap="round"/><defs><linearGradient id="gFt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2FB4A8"/><stop offset="1" stop-color="#46CB8E"/></linearGradient></defs></svg>
+          <b>Rimay</b>
+        </a>
+        <p>Terapia del habla guiada por visión. Convertimos la práctica en casa en progreso medible.</p>
+        <div class="socials">
+          <a href="#" aria-label="Instagram" data-hover><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+          <a href="#" aria-label="TikTok" data-hover><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M16 4c.4 2.3 1.9 3.9 4 4.2v2.7c-1.5.1-2.9-.4-4-1.2v5.6a5.3 5.3 0 1 1-5.3-5.3c.3 0 .6 0 .9.1v2.8a2.6 2.6 0 1 0 1.8 2.4V4H16Z"/></svg></a>
+          <a href="#" aria-label="LinkedIn" data-hover><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 8A1.5 1.5 0 1 1 6.5 5a1.5 1.5 0 0 1 0 3ZM5 10h3v9H5zM10 10h3v1.3c.5-.8 1.6-1.5 3-1.5 2.3 0 3 1.5 3 3.8V19h-3v-4.7c0-1.2-.4-1.9-1.4-1.9s-1.6.7-1.6 1.9V19h-3z"/></svg></a>
+        </div>
+      </div>
+      <div class="foot-cols">
+        <div class="fcol">
+          <span class="mono">Producto</span>
+          <a href="#como">Cómo funciona</a>
+          <a href="#privacidad">Privacidad</a>
+          <a href="#planes">Planes</a>
+          <a href="#contacto">Prueba gratis</a>
+        </div>
+        <div class="fcol">
+          <span class="mono">Rimay</span>
+          <a href="#sobre">Sobre Rimay</a>
+          <a href="#contacto">Contacto</a>
+          <a href="https://w.app/rimay" target="_blank" rel="noopener">WhatsApp</a>
+        </div>
+      </div>
+    </div>
+    <div class="foot-note" id="aviso">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5E7775" stroke-width="1.7" stroke-linecap="round" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+      <span>Rimay es una herramienta de apoyo a la terapia del habla; no sustituye la valoración ni el tratamiento de un profesional de salud.</span>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Rimay · Cuenca, Azuay · Ecuador</span>
+      <span style="display:flex;gap:22px"><a href="#privacidad">Privacidad</a><a href="#aviso">Términos</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
+<script>
+(function(){
+'use strict';
+var q = function(s,c){ return (c||document).querySelector(s); };
+var qa = function(s,c){ return Array.prototype.slice.call((c||document).querySelectorAll(s)); };
+var hasGsap = typeof window.gsap !== 'undefined';
+var hasST = hasGsap && typeof window.ScrollTrigger !== 'undefined';
+var finePointer = window.matchMedia('(pointer:fine)').matches;
+if (hasST) gsap.registerPlugin(ScrollTrigger);
+
+/* ============ Lenis smooth scroll ============ */
+var lenis = null;
+if (typeof window.Lenis !== 'undefined' && hasGsap) {
+  try {
+    lenis = new Lenis({ lerp: 0.09, smoothWheel: true });
+    lenis.on('scroll', function(){ if (hasST) ScrollTrigger.update(); });
+    gsap.ticker.add(function(t){ lenis.raf(t * 1000); });
+    gsap.ticker.lagSmoothing(0);
+  } catch(e){ lenis = null; }
+}
+/* anchor navigation (works with & without lenis) */
+qa('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click', function(ev){
+    var id = a.getAttribute('href');
+    if (id.length < 2) return;
+    var t = q(id);
+    if (!t) return;
+    ev.preventDefault();
+    document.body.classList.remove('menu-open');
+    if (lenis) lenis.scrollTo(t, { offset: -80, duration: 1.4 });
+    else t.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+/* ============ header + progress ============ */
+var hdr = q('#hdr'), prog = q('#progress-fill');
+function onScroll(){
+  var y = window.scrollY || 0;
+  if (hdr) hdr.classList.toggle('scrolled', y > 50);
+  if (prog) {
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    prog.style.transform = 'scaleX(' + (h > 0 ? Math.min(y / h, 1) : 0) + ')';
   }
 }
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+
+/* ============ mobile menu ============ */
+var burger = q('#burger');
+if (burger) burger.addEventListener('click', function(){ document.body.classList.toggle('menu-open'); });
+
+/* ============ background videos keep-alive ============ */
+function playVideos(){
+  qa('video[data-bgvideo]').forEach(function(v){
+    try { v.muted = true; var p = v.play(); if (p && p.catch) p.catch(function(){}); } catch(e){}
+  });
+}
+playVideos();
+setTimeout(playVideos, 400);
+document.addEventListener('visibilitychange', function(){ if (!document.hidden) playVideos(); });
+setInterval(function(){ if (!document.hidden) playVideos(); }, 5000);
+
+/* ============ custom cursor ============ */
+if (finePointer) {
+  var dot = q('.cur-dot'), ring = q('.cur-ring');
+  var mx = -100, my = -100, rx = -100, ry = -100, shown = false;
+  window.addEventListener('mousemove', function(e){
+    mx = e.clientX; my = e.clientY;
+    if (!shown){ shown = true; rx = mx; ry = my; document.body.classList.add('has-cursor'); }
+  });
+  document.addEventListener('mouseleave', function(){ document.body.classList.remove('has-cursor'); shown = false; });
+  qa('a,button,[data-hover],select,input,textarea').forEach(function(el){
+    el.addEventListener('mouseenter', function(){ ring.classList.add('is-hover'); });
+    el.addEventListener('mouseleave', function(){ ring.classList.remove('is-hover'); });
+  });
+  (function loop(){
+    rx += (mx - rx) * 0.16; ry += (my - ry) * 0.16;
+    if (dot) dot.style.transform = 'translate(' + (mx - 3.5) + 'px,' + (my - 3.5) + 'px)';
+    if (ring) ring.style.transform = 'translate(' + (rx - ring.offsetWidth/2) + 'px,' + (ry - ring.offsetHeight/2) + 'px)';
+    requestAnimationFrame(loop);
+  })();
+}
+
+/* ============ cursor particles ============ */
+if (finePointer) {
+  var fx = q('#fx'), fctx = fx.getContext('2d'), parts = [];
+  function sizeFx(){ fx.width = innerWidth; fx.height = innerHeight; }
+  sizeFx(); window.addEventListener('resize', sizeFx);
+  var lastSpawn = 0;
+  window.addEventListener('mousemove', function(e){
+    var now = performance.now();
+    if (now - lastSpawn < 26 || parts.length > 70) return;
+    lastSpawn = now;
+    parts.push({
+      x: e.clientX, y: e.clientY,
+      vx: (Math.random()-.5) * 1.1, vy: (Math.random()-.5) * 1.1 - .3,
+      r: Math.random() * 2.2 + .8, life: 1,
+      teal: Math.random() > .5
+    });
+  });
+  (function fxLoop(){
+    fctx.clearRect(0, 0, fx.width, fx.height);
+    fctx.globalCompositeOperation = 'lighter';
+    for (var i = parts.length - 1; i >= 0; i--) {
+      var p = parts[i];
+      p.x += p.vx; p.y += p.vy; p.life -= 0.022;
+      if (p.life <= 0){ parts.splice(i,1); continue; }
+      fctx.beginPath();
+      fctx.fillStyle = (p.teal ? 'rgba(47,180,168,' : 'rgba(70,203,142,') + (p.life * .5) + ')';
+      fctx.arc(p.x, p.y, p.r * p.life, 0, 6.2832);
+      fctx.fill();
+    }
+    requestAnimationFrame(fxLoop);
+  })();
+}
+
+/* ============ WebGL aurora (hero) ============ */
+(function(){
+  var cv = q('#aurora');
+  if (!cv) return;
+  var gl = cv.getContext('webgl', { antialias: false, alpha: false });
+  if (!gl){ cv.style.display = 'none'; return; }
+  var vsSrc = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  var fsSrc = [
+    'precision highp float;',
+    'uniform vec2 u_res;uniform float u_time;uniform vec2 u_mouse;',
+    'float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}',
+    'float noise(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.-2.*f);',
+    'return mix(mix(hash(i),hash(i+vec2(1.,0.)),u.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),u.x),u.y);}',
+    'float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*noise(p);p*=2.03;a*=.55;}return v;}',
+    'void main(){',
+    'vec2 uv=(gl_FragCoord.xy-.5*u_res)/u_res.y;',
+    'float t=u_time*.05;',
+    'vec2 m=u_mouse*.35;',
+    'vec2 qv=vec2(fbm(uv*1.2+t),fbm(uv*1.2-t*.7));',
+    'vec2 r=vec2(fbm(uv*1.2+qv*1.4+m+vec2(1.7,9.2)),fbm(uv*1.2+qv*1.4+vec2(8.3,2.8)-m));',
+    'float f=fbm(uv*1.2+r*1.8);',
+    'vec3 c1=vec3(.016,.035,.039);',
+    'vec3 c2=vec3(.05,.17,.16);',
+    'vec3 c3=vec3(.184,.706,.659);',
+    'vec3 c4=vec3(.275,.796,.557);',
+    'vec3 col=mix(c1,c2,smoothstep(.1,.9,f));',
+    'col=mix(col,c3,smoothstep(.5,.98,qv.y)*.32);',
+    'col=mix(col,c4,smoothstep(.62,1.,r.x)*.22);',
+    'float d=length(uv*vec2(.75,1.05));',
+    'col*=1.-d*.5;',
+    'gl_FragColor=vec4(col,1.);}'
+  ].join('\n');
+  function sh(type, src){
+    var s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(s);
+    return s;
+  }
+  var pr;
+  try {
+    pr = gl.createProgram();
+    gl.attachShader(pr, sh(gl.VERTEX_SHADER, vsSrc));
+    gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fsSrc));
+    gl.linkProgram(pr);
+    if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw 'link';
+  } catch(e){ cv.style.display = 'none'; return; }
+  gl.useProgram(pr);
+  var buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+  var loc = gl.getAttribLocation(pr, 'p');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  var uRes = gl.getUniformLocation(pr, 'u_res');
+  var uTime = gl.getUniformLocation(pr, 'u_time');
+  var uMouse = gl.getUniformLocation(pr, 'u_mouse');
+  var dpr = Math.min(window.devicePixelRatio || 1, 1.5) * 0.6;
+  function sizeGl(){
+    cv.width = Math.max(2, Math.floor(cv.clientWidth * dpr));
+    cv.height = Math.max(2, Math.floor(cv.clientHeight * dpr));
+    gl.viewport(0, 0, cv.width, cv.height);
+  }
+  sizeGl(); window.addEventListener('resize', sizeGl);
+  var mxx = 0, myy = 0, smx = 0, smy = 0;
+  window.addEventListener('mousemove', function(e){
+    mxx = (e.clientX / innerWidth - .5);
+    myy = (e.clientY / innerHeight - .5);
+  });
+  var visible = true;
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function(en){ visible = en[0].isIntersecting; }, { threshold: 0 }).observe(cv);
+  }
+  var t0 = performance.now();
+  (function draw(){
+    requestAnimationFrame(draw);
+    if (!visible || document.hidden) return;
+    smx += (mxx - smx) * .03; smy += (myy - smy) * .03;
+    gl.uniform2f(uRes, cv.width, cv.height);
+    gl.uniform1f(uTime, (performance.now() - t0) / 1000);
+    gl.uniform2f(uMouse, smx, smy);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  })();
+})();
+
+/* ============ text splitting ============ */
+function splitEl(el, mode){
+  var nodes = Array.prototype.slice.call(el.childNodes);
+  var frag = document.createDocumentFragment();
+  function wrap(content, isNode){
+    var w = document.createElement('span'); w.className = 'w';
+    var i = document.createElement('span'); i.className = 'wi';
+    if (isNode) i.appendChild(content); else i.textContent = content;
+    w.appendChild(i); frag.appendChild(w);
+  }
+  nodes.forEach(function(n){
+    if (n.nodeType === 3) {
+      n.textContent.split(/(\s+)/).forEach(function(part){
+        if (!part) return;
+        if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(' ')); return; }
+        if (mode === 'chars') {
+          var w = document.createElement('span'); w.className = 'w';
+          part.split('').forEach(function(ch){
+            var i = document.createElement('span'); i.className = 'wi';
+            i.textContent = ch; w.appendChild(i);
+          });
+          frag.appendChild(w);
+        } else wrap(part, false);
+      });
+    } else {
+      wrap(n.cloneNode(true), true);
+    }
+  });
+  el.innerHTML = '';
+  el.appendChild(frag);
+  return qa('.wi', el);
+}
+
+/* ============ GSAP orchestration ============ */
+var loader = q('#loader');
+function killLoader(){ if (loader){ loader.style.animation = 'none'; loader.style.pointerEvents = 'none'; } }
+
+if (hasGsap) {
+  /* hero split & initial states (loader still covers the screen) */
+  var heroChars = [];
+  qa('[data-split-chars]').forEach(function(l){ heroChars = heroChars.concat(splitEl(l, 'chars')); });
+  gsap.set(heroChars, { yPercent: 150 });
+  gsap.set(qa('.hero [data-reveal]'), { opacity: 0, y: 34 });
+  gsap.set('#hero-media', { opacity: 0, y: 60, scale: .96 });
+  gsap.set('.scroll-cue', { opacity: 0 });
+
+  /* loader out + hero in */
+  var intro = gsap.timeline({ paused: true });
+  intro
+    .to(loader, { yPercent: -100, duration: .8, ease: 'power4.inOut', onStart: killLoader,
+        onComplete: function(){ loader.style.display = 'none'; } })
+    .to(heroChars, { yPercent: 0, duration: 1.1, ease: 'power4.out', stagger: .022 }, '-=.25')
+    .to('#hero-media', { opacity: 1, y: 0, scale: 1, duration: 1.3, ease: 'power4.out' }, '-=.9')
+    .to(qa('.hero [data-reveal]'), { opacity: 1, y: 0, duration: .9, ease: 'power3.out', stagger: .09 }, '-=1')
+    .to('.scroll-cue', { opacity: 1, duration: .6 }, '-=.4');
+  window.addEventListener('load', function(){ setTimeout(function(){ intro.play(); }, 350); });
+  /* fallback if load event already fired or hangs */
+  setTimeout(function(){ if (!intro.isActive() && intro.progress() === 0) intro.play(); }, 2600);
+
+  if (hasST) {
+    /* h2 word reveals */
+    qa('[data-split]').forEach(function(h){
+      var words = splitEl(h, 'words');
+      gsap.set(words, { yPercent: 150 });
+      gsap.to(words, {
+        yPercent: 0, duration: 1, ease: 'power4.out', stagger: .05,
+        scrollTrigger: { trigger: h, start: 'top 85%', once: true }
+      });
+    });
+
+    /* generic reveals (outside hero) */
+    qa('[data-reveal]').forEach(function(el){
+      if (el.closest('.hero')) return;
+      gsap.set(el, { opacity: 0, y: 44 });
+      gsap.to(el, {
+        opacity: 1, y: 0, duration: 1, ease: 'power3.out',
+        delay: parseFloat(el.getAttribute('data-delay') || 0),
+        scrollTrigger: { trigger: el, start: 'top 88%', once: true }
+      });
+    });
+
+    /* ghost numbers parallax */
+    qa('[data-parallax]').forEach(function(el){
+      var f = parseFloat(el.getAttribute('data-parallax')) || .2;
+      gsap.fromTo(el, { y: 120 * f * 3 }, {
+        y: -120 * f * 3, ease: 'none',
+        scrollTrigger: { trigger: el.parentElement, start: 'top bottom', end: 'bottom top', scrub: 1 }
+      });
+    });
+
+    /* hero media drift + copy fade on scroll out */
+    gsap.to('#hero-media', {
+      y: -70, ease: 'none',
+      scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: 1 }
+    });
+    gsap.to('.hero-copy', {
+      y: -110, opacity: .25, ease: 'none',
+      scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom 30%', scrub: 1 }
+    });
+
+    /* count-up numbers */
+    qa('[data-count]').forEach(function(el){
+      var target = parseFloat(el.getAttribute('data-count')) || 0;
+      var pre = el.getAttribute('data-prefix') || '';
+      var suf = el.getAttribute('data-suffix') || '';
+      var o = { v: 0 };
+      ScrollTrigger.create({
+        trigger: el, start: 'top 90%', once: true,
+        onEnter: function(){
+          gsap.to(o, {
+            v: target, duration: 1.6, ease: 'power3.out',
+            onUpdate: function(){ el.textContent = pre + Math.round(o.v) + suf; }
+          });
+        }
+      });
+    });
+
+    /* horizontal panel section */
+    var mm = gsap.matchMedia();
+    mm.add('(min-width: 961px)', function(){
+      var track = q('#panel-track'), sec = q('#panel');
+      if (!track || !sec) return;
+      var getDist = function(){ return Math.max(0, track.scrollWidth - window.innerWidth + 60); };
+      var tween = gsap.to(track, {
+        x: function(){ return -getDist(); },
+        ease: 'none',
+        scrollTrigger: {
+          trigger: sec, start: 'top top',
+          end: function(){ return '+=' + getDist(); },
+          scrub: 1, pin: true, anticipatePin: 1, invalidateOnRefresh: true
+        }
+      });
+      return function(){ tween.scrollTrigger && tween.scrollTrigger.kill(); tween.kill(); gsap.set(track, { x: 0 }); };
+    });
+
+    /* footer word fill */
+    var ff = q('#foot-fill');
+    if (ff) gsap.fromTo(ff, { clipPath: 'inset(100% 0 0 0)' }, {
+      clipPath: 'inset(0% 0 0 0)', ease: 'none',
+      scrollTrigger: { trigger: 'footer', start: 'top 85%', end: 'bottom bottom', scrub: 1 }
+    });
+  }
+
+  /* magnetic buttons */
+  if (finePointer) {
+    qa('.magnetic').forEach(function(btn){
+      var label = q('.bl', btn);
+      btn.addEventListener('mousemove', function(e){
+        var r = btn.getBoundingClientRect();
+        var x = e.clientX - r.left - r.width / 2;
+        var y = e.clientY - r.top - r.height / 2;
+        gsap.to(btn, { x: x * .3, y: y * .3, duration: .5, ease: 'power3.out' });
+        if (label) gsap.to(label, { x: x * .12, y: y * .12, duration: .5, ease: 'power3.out' });
+      });
+      btn.addEventListener('mouseleave', function(){
+        gsap.to(btn, { x: 0, y: 0, duration: .9, ease: 'elastic.out(1,.35)' });
+        if (label) gsap.to(label, { x: 0, y: 0, duration: .9, ease: 'elastic.out(1,.35)' });
+      });
+    });
+  }
+} else {
+  /* no GSAP (CDN blocked): keep everything visible, kill loader via CSS fallback */
+  qa('[data-count]').forEach(function(el){
+    el.textContent = (el.getAttribute('data-prefix') || '') + el.getAttribute('data-count') + (el.getAttribute('data-suffix') || '');
+  });
+}
+
+/* ============ glow cards mouse tracking ============ */
+qa('.glow-card').forEach(function(card){
+  card.addEventListener('mousemove', function(e){
+    var r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+    card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+  });
+});
+
+/* ============ AND-gate simulator ============ */
+(function(){
+  var vid = q('#sim-video');
+  if (!vid) return;
+  var movBar = q('#mov-bar'), movVal = q('#mov-val'), vozVal = q('#voz-val');
+  var gMov = q('#g-mov'), gVoz = q('#g-voz'), gAnd = q('#g-and'), gOut = q('#g-out');
+  var gw1 = q('#gw-1'), gw2 = q('#gw-2');
+  var simPct = q('#sim-pct'), simCircle = q('#sim-circle'), simState = q('#sim-state'), simMs = q('#sim-ms');
+  var repCount = q('#rep-count'), repFlash = q('#rep-flash');
+  var wave = q('#wave'), wctx = wave.getContext('2d');
+  var BARS = 42, amps = [], i;
+  for (i = 0; i < BARS; i++) amps.push(0.06);
+
+  function sizeWave(){
+    var r = wave.getBoundingClientRect();
+    wave.width = Math.max(10, Math.floor(r.width * (window.devicePixelRatio || 1)));
+    wave.height = Math.floor(64 * (window.devicePixelRatio || 1));
+  }
+  sizeWave(); window.addEventListener('resize', sizeWave);
+
+  var smMov = 0, lastValid = false, reps = 0, lastRep = 0, lastMsT = 0;
+  var running = true;
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function(en){ running = en[0].isIntersecting; }, { threshold: 0 })
+      .observe(q('.sim-wrap') || vid);
+  }
+
+  function tick(now){
+    requestAnimationFrame(tick);
+    if (!running || document.hidden) return;
+    var t = vid.currentTime || now / 1000;
+
+    /* simulated signals (same model as before: sine-driven movement, pulsed voice) */
+    var raw = Math.sin(t * 1.8) * 45 + 42 + Math.sin(t * 7.3) * 8;
+    var mov = Math.max(0, Math.min(100, raw));
+    smMov += (mov - smMov) * .12;
+    var pct = Math.round(smMov);
+    var hasMov = pct > 45;
+    var isVoz = (Math.sin(t * 2.5) > 0.6) || (Math.cos(t * 1.5) > 0.8);
+    var valid = hasMov && isVoz;
+
+    /* movement meter + ring */
+    movBar.style.transform = 'scaleX(' + (pct / 100) + ')';
+    movVal.textContent = pct + '%';
+    simPct.textContent = pct + '%';
+    simCircle.style.strokeDashoffset = 144.5 - 144.5 * pct / 100;
+    simCircle.style.stroke = valid ? '#46CB8E' : (hasMov ? '#E2A23E' : '#2FB4A8');
+
+    /* voice waveform */
+    var W = wave.width, H = wave.height, bw = W / BARS;
+    wctx.clearRect(0, 0, W, H);
+    for (var b = 0; b < BARS; b++) {
+      var targetAmp = isVoz ? (0.25 + Math.abs(Math.sin(t * 9 + b * 1.7)) * .68) : (0.04 + Math.random() * .05);
+      amps[b] += (targetAmp - amps[b]) * .25;
+      var bh = Math.max(2, amps[b] * H * .92);
+      wctx.fillStyle = isVoz ? 'rgba(70,203,142,.9)' : 'rgba(143,168,165,.35)';
+      wctx.fillRect(b * bw + bw * .22, (H - bh) / 2, bw * .56, bh);
+    }
+    vozVal.textContent = isVoz ? 'FONACIÓN ✓' : '···';
+    vozVal.style.color = isVoz ? '#46CB8E' : '#5E7775';
+
+    /* gate states */
+    gMov.classList.toggle('on', hasMov);
+    gVoz.classList.toggle('on', isVoz);
+    gw1.classList.toggle('on', hasMov || isVoz);
+    gAnd.classList.toggle('on', valid);
+    gw2.classList.toggle('on', valid);
+    gOut.classList.toggle('on', valid);
+    repFlash.classList.toggle('on', valid);
+    simState.textContent = valid ? 'Repetición válida ✓' : (hasMov ? 'Movimiento sin voz…' : 'Analizando señal…');
+
+    /* valid-rep counter on rising edge */
+    if (valid && !lastValid && now - lastRep > 900) {
+      reps++;
+      lastRep = now;
+      repCount.textContent = reps;
+      if (hasGsap) gsap.fromTo(repCount, { scale: 1.25 }, { scale: 1, duration: .5, ease: 'power3.out' });
+    }
+    lastValid = valid;
+
+    /* fake inference time readout */
+    if (now - lastMsT > 600) { lastMsT = now; simMs.textContent = (Math.random() * .12 + .61).toFixed(2); }
+  }
+  requestAnimationFrame(tick);
+})();
+
+/* ============ contact form (Formspree + success state) ============ */
+(function(){
+  var form = q('#demo-form'), ok = q('#form-ok');
+  if (!form) return;
+  var roles = { fono: 'Fonoaudiólogo/a', clinica: 'Clínica o institución', paciente: 'Paciente o familiar', otro: 'Otro' };
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    var roleVal = q('#f-role').value;
+    var data = {
+      name: q('#f-name').value,
+      role: roles[roleVal] || roleVal,
+      email: q('#f-email').value,
+      message: q('#f-msg').value
+    };
+
+    fetch('https://formspree.io/f/mykqnaad', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(function(res){
+      if (res.ok) {
+        form.classList.add('hide');
+        ok.classList.add('show');
+      } else {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    }).catch(function(){
+      if (submitBtn) submitBtn.disabled = false;
+    });
+  });
+})();
+
+})();
 </script>
 </body>
 </html>
